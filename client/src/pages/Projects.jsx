@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import axios from "axios"
+import { useAuth } from "../context/AuthContext"
 
 const Projects = () => {
   const [projects, setProjects] = useState([])
@@ -26,13 +27,16 @@ const Projects = () => {
     assignedTo: "",
   })
   const [error, setError] = useState("")
+  const { user } = useAuth()
 
   useEffect(() => {
-    fetchProjects()
-    fetchAccounts()
-    fetchContacts()
-    fetchUsers()
-  }, [])
+    if (user?.role !== "customer") {
+      fetchProjects()
+      fetchAccounts()
+      fetchContacts()
+      fetchUsers()
+    }
+  }, [user])
 
   const fetchProjects = async () => {
     try {
@@ -181,6 +185,10 @@ const Projects = () => {
 
   if (loading) {
     return <div className="loading">Loading projects...</div>
+  }
+
+  if (user?.role === "customer") {
+    return <div style={{ padding: 40, textAlign: "center", color: "#b91c1c", fontWeight: 600, fontSize: 24 }}>You are not authorized to view this page.</div>
   }
 
   return (

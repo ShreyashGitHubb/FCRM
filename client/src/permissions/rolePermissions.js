@@ -45,7 +45,7 @@ export const rolePermissions = {
   ],
   sales_executive: ["/", "/leads", "/deals", "/contacts", "/accounts", "/projects", "/tasks", "/email-center"],
   support_agent: ["/", "/tasks", "/tickets", "/projects"],
-  customer: ["/", "/tickets", "/portal", "/projects"],
+  customer: ["/", "/tickets", "/portal"],
 }
 
 // Define role hierarchy for better permission management
