@@ -3,7 +3,7 @@ import React from 'react';
 const Card = ({ className, children, ...props }) => {
   return (
     <div
-      className={`rounded-lg border border-gray-200 bg-white text-gray-950 shadow-sm ${className || ''}`}
+      className={`card ${className || ''}`}
       {...props}
     >
       {children}
@@ -13,7 +13,7 @@ const Card = ({ className, children, ...props }) => {
 
 const CardHeader = ({ className, children, ...props }) => {
   return (
-    <div className={`flex flex-col space-y-1.5 p-6 ${className || ''}`} {...props}>
+    <div className={`card-header ${className || ''}`} {...props}>
       {children}
     </div>
   );
@@ -21,7 +21,7 @@ const CardHeader = ({ className, children, ...props }) => {
 
 const CardTitle = ({ className, children, ...props }) => {
   return (
-    <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className || ''}`} {...props}>
+    <h3 className={`card-title ${className || ''}`} {...props}>
       {children}
     </h3>
   );
@@ -29,7 +29,7 @@ const CardTitle = ({ className, children, ...props }) => {
 
 const CardContent = ({ className, children, ...props }) => {
   return (
-    <div className={`p-6 pt-0 ${className || ''}`} {...props}>
+    <div className={`card-body ${className || ''}`} {...props}>
       {children}
     </div>
   );

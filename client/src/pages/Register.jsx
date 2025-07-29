@@ -68,84 +68,124 @@ const Register = () => {
         justifyContent: "center",
         alignItems: "center",
         minHeight: "100vh",
-        background: "#f5f5f5",
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        padding: "20px",
       }}
     >
-      <div className="card" style={{ width: "400px" }}>
-        <h2 style={{ textAlign: "center", marginBottom: "30px" }}>Register for CRM</h2>
+      <div className="card" style={{ width: "100%", maxWidth: "480px" }}>
+        <div className="card-header" style={{ textAlign: "center" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "16px" }}>🚀</div>
+          <h2 className="card-title" style={{ margin: "0 0 8px 0" }}>Create Account</h2>
+          <p style={{ color: "var(--text-secondary)", margin: 0 }}>
+            Join our CRM platform today
+          </p>
+        </div>
 
-        {error && <div className="alert alert-error">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+        <div className="card-body">
+          {error && (
+            <div className="alert alert-danger">
+              <span>⚠️</span>
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="alert alert-success">
+              <span>✅</span>
+              {success}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Name:</label>
-            <input
-              type="text"
-              name="name"
-              className="form-control"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              disabled={isSubmitting}
-            />
-          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>👤 Full Name</label>
+              <input
+                type="text"
+                name="name"
+                className="form-control"
+                placeholder="Enter your full name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                disabled={isSubmitting}
+              />
+            </div>
 
-          <div className="form-group">
-            <label>Email:</label>
-            <input
-              type="email"
-              name="email"
-              className="form-control"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              disabled={isSubmitting}
-            />
-          </div>
+            <div className="form-group">
+              <label>📧 Email Address</label>
+              <input
+                type="email"
+                name="email"
+                className="form-control"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                disabled={isSubmitting}
+              />
+            </div>
 
-          <div className="form-group">
-            <label>Password:</label>
-            <input
-              type="password"
-              name="password"
-              className="form-control"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              disabled={isSubmitting}
-            />
-          </div>
+            <div className="form-group">
+              <label>🔒 Password</label>
+              <input
+                type="password"
+                name="password"
+                className="form-control"
+                placeholder="Create a strong password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                disabled={isSubmitting}
+              />
+            </div>
 
-          <div className="form-group">
-            <label>Role:</label>
-            <select 
-              name="role" 
-              className="form-control" 
-              value={formData.role} 
-              onChange={handleChange}
+            <div className="form-group">
+              <label>💼 Role</label>
+              <select
+                name="role"
+                className="form-control"
+                value={formData.role}
+                onChange={handleChange}
+                disabled={isSubmitting}
+              >
+                <option value="sales_executive">Sales Executive</option>
+                <option value="sales_manager">Sales Manager</option>
+                <option value="support_agent">Support Agent</option>
+                <option value="customer">Customer</option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: "100%" }}
               disabled={isSubmitting}
             >
-              <option value="sales_executive">Sales Executive</option>
-              <option value="sales_manager">Sales Manager</option>
-              <option value="support_agent">Support Agent</option>
-              <option value="customer">Customer</option>
-            </select>
+              <span>🎯</span>
+              {isSubmitting ? "Creating Account..." : "Create Account"}
+            </button>
+          </form>
+
+          <div style={{
+            textAlign: "center",
+            marginTop: "24px",
+            paddingTop: "24px",
+            borderTop: "1px solid var(--border-color)"
+          }}>
+            <p style={{ color: "var(--text-secondary)", margin: 0 }}>
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                style={{
+                  color: "var(--primary-color)",
+                  textDecoration: "none",
+                  fontWeight: "600"
+                }}
+              >
+                Sign In
+              </Link>
+            </p>
           </div>
-
-          <button 
-            type="submit" 
-            className="btn btn-primary" 
-            style={{ width: "100%" }}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Registering..." : "Register"}
-          </button>
-        </form>
-
-        <p style={{ textAlign: "center", marginTop: "20px" }}>
-          Already have an account? <Link to="/login">Login here</Link>
-        </p>
+        </div>
       </div>
     </div>
   )

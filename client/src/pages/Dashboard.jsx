@@ -69,10 +69,18 @@ const Dashboard = () => {
 
   return (
     <div>
-      <h1>Dashboard</h1>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">📊 Dashboard</h1>
+          <p className="page-subtitle">
+            Overview of your CRM activities and performance metrics
+          </p>
+        </div>
+      </div>
+
       <div className="stats-grid">
         {getStatsForRole().map((stat, index) => (
-          <div key={index} className="stat-card">
+          <div key={index} className="stat">
             <div className="stat-number" style={{ color: stat.color }}>
               {stat.value}
             </div>
@@ -81,12 +89,75 @@ const Dashboard = () => {
         ))}
       </div>
 
-      <div className="card">
-        <h3>Welcome to the CRM System</h3>
-        <p>
-          You are logged in as <strong>{user?.name}</strong> with the role of <strong>{user?.role}</strong>.
-        </p>
-        <p>Use the navigation menu to access different sections of the CRM system based on your role permissions.</p>
+      <div className="dashboard-grid">
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">🎯 Welcome Back!</h3>
+          </div>
+          <div className="card-body">
+            <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "20px" }}>
+              <div style={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, var(--primary-color), var(--info-color))",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "1.5rem",
+                color: "white"
+              }}>
+                👤
+              </div>
+              <div>
+                <h4 style={{ margin: "0 0 4px 0", color: "var(--text-primary)" }}>
+                  {user?.name}
+                </h4>
+                <p style={{ margin: 0, color: "var(--text-secondary)", textTransform: "capitalize" }}>
+                  {user?.role?.replace("_", " ")} • Active
+                </p>
+              </div>
+            </div>
+            <p style={{ color: "var(--text-secondary)", lineHeight: "1.6" }}>
+              Welcome to your CRM dashboard! Use the navigation menu to access different sections
+              based on your role permissions. Your performance metrics are displayed above.
+            </p>
+            <div style={{
+              marginTop: "20px",
+              padding: "16px",
+              background: "var(--surface-color)",
+              borderRadius: "var(--radius)",
+              border: "1px solid var(--border-color)"
+            }}>
+              <h5 style={{ margin: "0 0 8px 0", color: "var(--text-primary)" }}>
+                🚀 Quick Actions
+              </h5>
+              <p style={{ margin: "0 0 12px 0", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+                Get started with these common tasks
+              </p>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                <button className="btn btn-sm btn-primary">Add Lead</button>
+                <button className="btn btn-sm btn-secondary">View Reports</button>
+                <button className="btn btn-sm btn-secondary">Manage Tasks</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">📈 Recent Activity</h3>
+          </div>
+          <div className="card-body">
+            <div className="empty-state">
+              <div className="empty-state-icon">📋</div>
+              <div className="empty-state-title">No Recent Activity</div>
+              <div className="empty-state-description">
+                Your recent activities will appear here once you start using the system.
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

@@ -100,10 +100,10 @@ const Layout = ({ children }) => {
   return (
     <div style={{ display: "flex" }}>
       <div className="sidebar">
-        <div style={{ padding: "20px", borderBottom: "1px solid #495057" }}>
-          <h3>CRM System</h3>
-          <p style={{ fontSize: "12px", color: "#adb5bd", marginTop: "5px" }}>
-            {user?.name} ({user?.role?.replace("_", " ")})
+        <div className="sidebar-header">
+          <h3>🏢 CRM System</h3>
+          <p>
+            {user?.name} • {user?.role?.replace("_", " ").toUpperCase()}
           </p>
         </div>
         <ul className="sidebar-nav">
@@ -112,7 +112,6 @@ const Layout = ({ children }) => {
               <Link
                 to={item.path}
                 className={location.pathname === item.path ? "active" : ""}
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
                 <span>{item.icon}</span>
                 {item.label}
@@ -121,21 +120,39 @@ const Layout = ({ children }) => {
           ))}
         </ul>
         {navItems.length === 0 && (
-          <div style={{ padding: "20px", textAlign: "center", color: "#adb5bd" }}>
-            <p>No navigation items available for your role.</p>
-            <p style={{ fontSize: "0.8rem", marginTop: "5px" }}>Contact your administrator for access.</p>
+          <div style={{ padding: "32px 20px", textAlign: "center" }}>
+            <div className="empty-state">
+              <div className="empty-state-icon">🚫</div>
+              <div className="empty-state-title">No Access</div>
+              <div className="empty-state-description">
+                No navigation items available for your role. Contact your administrator for access.
+              </div>
+            </div>
           </div>
         )}
       </div>
 
-      <div className="main-content" style={{ width: "100%" }}>
+      <div className="main-content">
         <div className="header">
-          <h2>Welcome, {user?.name}</h2>
+          <div>
+            <h2>Welcome back, {user?.name}! 👋</h2>
+            <p style={{ margin: "4px 0 0 0", color: "var(--text-secondary)", fontSize: "0.875rem" }}>
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </p>
+          </div>
           <button className="btn btn-secondary" onClick={logout}>
+            <span>🚪</span>
             Logout
           </button>
         </div>
-        {children}
+        <div className="page-container">
+          {children}
+        </div>
       </div>
     </div>
   )
