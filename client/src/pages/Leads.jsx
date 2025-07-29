@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import axios from "axios"
+import { useAuth } from "../context/AuthContext"
 
 const Leads = () => {
   const [leads, setLeads] = useState([])
@@ -17,10 +18,17 @@ const Leads = () => {
     status: "new",
     source: "website",
     notes: "",
+    assignedTo: "",
   })
+  const [users, setUsers] = useState([])
+  const [error, setError] = useState("")
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchLeads()
+    if (user?.role === "admin" || user?.role === "super_admin") {
+      fetchUsers()
+    }
   }, [])
 
   const fetchLeads = async () => {
@@ -34,19 +42,37 @@ const Leads = () => {
     }
   }
 
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get("/api/users")
+      setUsers(res.data.data)
+    } catch (error) {
+      console.error("Error fetching users:", error)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError("")
     try {
+      let submitData = { ...formData }
+      // Only send assignedTo if admin/super_admin and selected
+      if (user?.role !== "admin" && user?.role !== "super_admin") {
+        delete submitData.assignedTo
+      } else if (submitData.assignedTo === "") {
+        delete submitData.assignedTo
+      }
       if (editingLead) {
-        await axios.put(`/api/leads/${editingLead._id}`, formData)
+        await axios.put(`/api/leads/${editingLead._id}`, submitData)
       } else {
-        await axios.post("/api/leads", formData)
+        await axios.post("/api/leads", submitData)
       }
       setShowModal(false)
       setEditingLead(null)
       resetForm()
       fetchLeads()
     } catch (error) {
+      setError(error.response?.data?.message || "Error saving lead.")
       console.error("Error saving lead:", error)
     }
   }
@@ -62,6 +88,7 @@ const Leads = () => {
       status: lead.status,
       source: lead.source,
       notes: lead.notes || "",
+      assignedTo: lead.assignedTo?._id || "",
     })
     setShowModal(true)
   }
@@ -76,6 +103,7 @@ const Leads = () => {
       status: "new",
       source: "website",
       notes: "",
+      assignedTo: "",
     })
   }
 
@@ -157,6 +185,9 @@ const Leads = () => {
               </button>
             </div>
             <form onSubmit={handleSubmit}>
+              {error && (
+                <div style={{ color: "red", marginBottom: 10 }}>{error}</div>
+              )}
               <div className="form-group">
                 <label>First Name:</label>
                 <input
@@ -234,6 +265,22 @@ const Leads = () => {
                   <option value="other">Other</option>
                 </select>
               </div>
+              {/* AssignedTo dropdown for admin/super_admin only */}
+              {user?.role === "admin" || user?.role === "super_admin" ? (
+                <div className="form-group">
+                  <label>Assign To:</label>
+                  <select
+                    className="form-control"
+                    value={formData.assignedTo}
+                    onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                  >
+                    <option value="">Select User</option>
+                    {users.map((u) => (
+                      <option key={u._id} value={u._id}>{u.name} ({u.role})</option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
               <div className="form-group">
                 <label>Notes:</label>
                 <textarea
