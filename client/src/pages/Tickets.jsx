@@ -53,10 +53,14 @@ const Tickets = () => {
     e.preventDefault()
     setError("")
     try {
+      let submitData = { ...formData }
+      if (submitData.assignedTo === "") {
+        delete submitData.assignedTo
+      }
       if (editingTicket) {
-        await axios.put(`/api/tickets/${editingTicket._id}`, formData)
+        await axios.put(`/api/tickets/${editingTicket._id}`, submitData)
       } else {
-        await axios.post("/api/tickets", formData)
+        await axios.post("/api/tickets", submitData)
       }
       setShowModal(false)
       setEditingTicket(null)
