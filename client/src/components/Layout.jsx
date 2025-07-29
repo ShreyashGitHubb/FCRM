@@ -1,159 +1,89 @@
-"use client"
-import { Link, useLocation } from "react-router-dom"
-import { useAuth } from "../context/AuthContext"
-import { usePermissions } from "../hooks/usePermissions"
-import { canApproveUsers } from "../permissions/rolePermissions"
+import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import Sidebar from './Sidebar'
+import Header from './Header'
+import { cn } from '../lib/utils'
 
 const Layout = ({ children }) => {
-  const { user, logout } = useAuth()
-  const { canAccess } = usePermissions()
-  const location = useLocation()
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  const getNavItems = () => {
-    const allItems = [
-      {
-        path: "/",
-        label: "Dashboard",
-        icon: "📊",
-      },
-      {
-        path: "/leads",
-        label: "Leads",
-        icon: "🎯",
-      },
-      {
-        path: "/deals",
-        label: "Deals",
-        icon: "💰",
-      },
-      {
-        path: "/contacts",
-        label: "Contacts",
-        icon: "👤",
-      },
-      {
-        path: "/accounts",
-        label: "Accounts",
-        icon: "🏢",
-      },
-      {
-        path: "/projects",
-        label: "Projects",
-        icon: "📋",
-      },
-      {
-        path: "/tasks",
-        label: "Tasks",
-        icon: "✅",
-      },
-      {
-        path: "/tickets",
-        label: "Tickets",
-        icon: "🎫",
-      },
-      {
-        path: "/email-center",
-        label: "Email Center",
-        icon: "📧",
-      },
-      {
-        path: "/import-export",
-        label: "Import/Export",
-        icon: "📤",
-      },
-      {
-        path: "/users",
-        label: "Users",
-        icon: "👥",
-      },
-      {
-        path: "/portal",
-        label: "Portal",
-        icon: "🌐",
-      },
-    ]
-
-    // Add admin dashboard for admin and superadmin
-    if (user?.role === "admin" || user?.role === "super_admin") {
-      allItems.push({
-        path: "/admin-dashboard",
-        label: "Admin Dashboard",
-        icon: "📈",
-      })
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+      if (window.innerWidth < 768) {
+        setIsCollapsed(true)
+      }
     }
 
-    // Add pending approvals for admin and superadmin
-    if (canApproveUsers(user?.role)) {
-      allItems.push({
-        path: "/pending-approvals",
-        label: "Pending Approvals",
-        icon: "⏳",
-      })
-    }
-
-    // Filter items based on user permissions
-    return allItems.filter((item) => canAccess(item.path))
-  }
-
-  const navItems = getNavItems()
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   return (
-    <div style={{ display: "flex" }}>
-      <div className="sidebar">
-        <div className="sidebar-header">
-          <h3>🏢 CRM System</h3>
-          <p>
-            {user?.name} • {user?.role?.replace("_", " ").toUpperCase()}
-          </p>
-        </div>
-        <ul className="sidebar-nav">
-          {navItems.map((item) => (
-            <li key={item.path}>
-              <Link
-                to={item.path}
-                className={location.pathname === item.path ? "active" : ""}
-              >
-                <span>{item.icon}</span>
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-        {navItems.length === 0 && (
-          <div style={{ padding: "32px 20px", textAlign: "center" }}>
-            <div className="empty-state">
-              <div className="empty-state-icon">🚫</div>
-              <div className="empty-state-title">No Access</div>
-              <div className="empty-state-description">
-                No navigation items available for your role. Contact your administrator for access.
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+    <div className="min-h-screen bg-background">
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      )}
 
-      <div className="main-content" style={{ width: "100%" }}>
-        <div className="header">
-          <div>
-            <h2>Welcome back, {user?.name}! 👋</h2>
-            <p style={{ margin: "4px 0 0 0", color: "var(--text-secondary)", fontSize: "0.875rem" }}>
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </p>
-          </div>
-          <button className="btn btn-secondary" onClick={logout}>
-            <span>🚪</span>
-            Logout
-          </button>
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isMobile && isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/50 md:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              className="fixed left-0 top-0 z-50 h-screen w-80 md:hidden"
+            >
+              <Sidebar
+                isCollapsed={false}
+                setIsCollapsed={() => setIsMobileMenuOpen(false)}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Header */}
+      <Header
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
+        isMobile={isMobile}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      />
+
+      {/* Main Content */}
+      <motion.main
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.1 }}
+        className={cn(
+          "transition-all duration-300 min-h-[calc(100vh-80px)]",
+          !isMobile && (isCollapsed ? "ml-20" : "ml-80")
+        )}
+      >
+        <div className="container mx-auto px-6 py-8 max-w-7xl">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
+            {children}
+          </motion.div>
         </div>
-        <div className="page-container">
-          {children}
-        </div>
-      </div>
+      </motion.main>
     </div>
   )
 }

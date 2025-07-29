@@ -193,9 +193,9 @@ const Users = () => {
             Manage user accounts and permissions
           </p>
         </div>
-        <Button onClick={() => setShowModal(true)}>
+        {/* <Button onClick={() => setShowModal(true)}>
           Add New User
-        </Button>
+        </Button> */}
       </div>
 
       <Card>

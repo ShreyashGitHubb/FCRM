@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider } from "./context/AuthContext"
+import { ThemeProvider } from "./context/ThemeContext"
+import { ToastProvider } from "./components/ui/Toast"
 import ProtectedRoute from "./routes/ProtectedRoute"
 import Layout from "./components/Layout"
 import Login from "./pages/Login"
@@ -107,34 +109,38 @@ const EmailCenterPage = () => (
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/403" element={<Forbidden />} />
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/403" element={<Forbidden />} />
 
-          {/* Protected Routes */}
-          <Route path="/" element={<ProtectedRoute element={DashboardPage} />} />
-          <Route path="/leads" element={<ProtectedRoute element={LeadsPage} />} />
-          <Route path="/deals" element={<ProtectedRoute element={DealsPage} />} />
-          <Route path="/tasks" element={<ProtectedRoute element={TasksPage} />} />
-          <Route path="/tickets" element={<ProtectedRoute element={TicketsPage} />} />
-          <Route path="/users" element={<ProtectedRoute element={UsersPage} />} />
-          <Route path="/portal" element={<ProtectedRoute element={PortalPage} />} />
-          <Route path="/pending-approvals" element={<ProtectedRoute element={PendingApprovalsPage} />} />
-          <Route path="/contacts" element={<ProtectedRoute element={ContactsPage} />} />
-          <Route path="/accounts" element={<ProtectedRoute element={AccountsPage} />} />
-          <Route path="/projects" element={<ProtectedRoute element={ProjectsPage} />} />
-          <Route path="/admin-dashboard" element={<ProtectedRoute element={AdminDashboardPage} />} />
-          <Route path="/import-export" element={<ProtectedRoute element={ImportExportPage} />} />
-          <Route path="/email-center" element={<ProtectedRoute element={EmailCenterPage} />} />
+              {/* Protected Routes */}
+              <Route path="/" element={<ProtectedRoute element={DashboardPage} />} />
+              <Route path="/leads" element={<ProtectedRoute element={LeadsPage} />} />
+              <Route path="/deals" element={<ProtectedRoute element={DealsPage} />} />
+              <Route path="/tasks" element={<ProtectedRoute element={TasksPage} />} />
+              <Route path="/tickets" element={<ProtectedRoute element={TicketsPage} />} />
+              <Route path="/users" element={<ProtectedRoute element={UsersPage} />} />
+              <Route path="/portal" element={<ProtectedRoute element={PortalPage} />} />
+              <Route path="/pending-approvals" element={<ProtectedRoute element={PendingApprovalsPage} />} />
+              <Route path="/contacts" element={<ProtectedRoute element={ContactsPage} />} />
+              <Route path="/accounts" element={<ProtectedRoute element={AccountsPage} />} />
+              <Route path="/projects" element={<ProtectedRoute element={ProjectsPage} />} />
+              <Route path="/admin-dashboard" element={<ProtectedRoute element={AdminDashboardPage} />} />
+              <Route path="/import-export" element={<ProtectedRoute element={ImportExportPage} />} />
+              <Route path="/email-center" element={<ProtectedRoute element={EmailCenterPage} />} />
 
-          {/* Catch all route - redirect to dashboard or login */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+              {/* Catch all route - redirect to dashboard or login */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Router>
+        </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
   )
 }
 
