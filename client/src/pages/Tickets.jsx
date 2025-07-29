@@ -18,10 +18,15 @@ const Tickets = () => {
     customer: "",
     assignedTo: "",
   })
+  const [customers, setCustomers] = useState([])
+  const [error, setError] = useState("")
   const { user } = useAuth()
 
   useEffect(() => {
     fetchTickets()
+    if (user?.role !== "customer") {
+      fetchCustomers()
+    }
   }, [])
 
   const fetchTickets = async () => {
@@ -35,8 +40,18 @@ const Tickets = () => {
     }
   }
 
+  const fetchCustomers = async () => {
+    try {
+      const res = await axios.get("/api/users")
+      setCustomers(res.data.data.filter(u => u.role === "customer"))
+    } catch (error) {
+      console.error("Error fetching customers:", error)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError("")
     try {
       if (editingTicket) {
         await axios.put(`/api/tickets/${editingTicket._id}`, formData)
@@ -48,6 +63,7 @@ const Tickets = () => {
       resetForm()
       fetchTickets()
     } catch (error) {
+      setError(error.response?.data?.message || "Error saving ticket.")
       console.error("Error saving ticket:", error)
     }
   }
@@ -173,6 +189,9 @@ const Tickets = () => {
               </button>
             </div>
             <form onSubmit={handleSubmit}>
+              {error && (
+                <div style={{ color: "red", marginBottom: 10 }}>{error}</div>
+              )}
               <div className="form-group">
                 <label>Title:</label>
                 <input
@@ -193,6 +212,23 @@ const Tickets = () => {
                   required
                 />
               </div>
+              {/* Customer selection for admin/support agent */}
+              {user?.role !== "customer" && (
+                <div className="form-group">
+                  <label>Customer:</label>
+                  <select
+                    className="form-control"
+                    value={formData.customer}
+                    onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
+                    required
+                  >
+                    <option value="">Select Customer</option>
+                    {customers.map((c) => (
+                      <option key={c._id} value={c._id}>{c.name} ({c.email})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="form-group">
                 <label>Status:</label>
                 <select

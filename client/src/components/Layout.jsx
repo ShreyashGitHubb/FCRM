@@ -132,7 +132,7 @@ const Layout = ({ children }) => {
         )}
       </div>
 
-      <div className="main-content">
+      <div className="main-content" style={{ width: "100%" }}>
         <div className="header">
           <div>
             <h2>Welcome back, {user?.name}! 👋</h2>

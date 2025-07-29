@@ -23,7 +23,9 @@ const Projects = () => {
     contact: "",
     teamMembers: [],
     milestones: [],
+    assignedTo: "",
   })
+  const [error, setError] = useState("")
 
   useEffect(() => {
     fetchProjects()
@@ -72,17 +74,24 @@ const Projects = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError("")
     try {
+      let submitData = { ...formData }
+      if (!submitData.assignedTo) {
+        // Default to first user in list or leave blank
+        submitData.assignedTo = users[0]?._id || ""
+      }
       if (editingProject) {
-        await axios.put(`/api/projects/${editingProject._id}`, formData)
+        await axios.put(`/api/projects/${editingProject._id}`, submitData)
       } else {
-        await axios.post("/api/projects", formData)
+        await axios.post("/api/projects", submitData)
       }
       setShowModal(false)
       setEditingProject(null)
       resetForm()
       fetchProjects()
     } catch (error) {
+      setError(error.response?.data?.message || "Error saving project.")
       console.error("Error saving project:", error)
     }
   }
@@ -101,6 +110,7 @@ const Projects = () => {
       contact: project.contact?._id || "",
       teamMembers: project.teamMembers?.map((member) => member._id) || [],
       milestones: project.milestones || [],
+      assignedTo: project.assignedTo?._id || "",
     })
     setShowModal(true)
   }
@@ -118,6 +128,7 @@ const Projects = () => {
       contact: "",
       teamMembers: [],
       milestones: [],
+      assignedTo: "",
     })
   }
 
@@ -269,6 +280,9 @@ const Projects = () => {
               </button>
             </div>
             <form onSubmit={handleSubmit}>
+              {error && (
+                <div style={{ color: "red", marginBottom: 10 }}>{error}</div>
+              )}
               <div className="form-group">
                 <label>Project Name:</label>
                 <input
@@ -379,6 +393,23 @@ const Projects = () => {
                     ))}
                   </select>
                 </div>
+              </div>
+              {/* AssignedTo selection */}
+              <div className="form-group">
+                <label>Assigned To:</label>
+                <select
+                  className="form-control"
+                  value={formData.assignedTo}
+                  onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                  required
+                >
+                  <option value="">Select User</option>
+                  {users.map((user) => (
+                    <option key={user._id} value={user._id}>
+                      {user.name} ({user.role})
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="form-group">
                 <label>Team Members:</label>
