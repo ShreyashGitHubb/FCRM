@@ -709,46 +709,26 @@ const Projects = () => {
         </Tabs>
       </motion.div>
 
-      {showModal && (
-        <div className="modal">
-          <div className="modal-content" style={{ maxWidth: "800px" }}>
-            <div className="modal-header">
-              <h3>{editingProject ? "Edit Project" : "Add New Project"}</h3>
-              <button className="close" onClick={() => setShowModal(false)}>
-                ×
-              </button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              {error && (
-                <div style={{ color: "red", marginBottom: 10 }}>{error}</div>
-              )}
-              <div className="form-group">
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent style={{ maxWidth: 800 }}>
+          <DialogHeader>
+            <DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            {error && <div className="text-red-600 mb-2">{error}</div>}
+            <div className="space-y-4">
+              <div>
                 <label>Project Name:</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
+                <Input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
               </div>
-              <div className="form-group">
+              <div>
                 <label>Description:</label>
-                <textarea
-                  className="form-control"
-                  rows="3"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
+                <Input as="textarea" rows={3} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
-                <div className="form-group">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                   <label>Status:</label>
-                  <select
-                    className="form-control"
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  >
+                  <select className="form-control" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                     <option value="planning">Planning</option>
                     <option value="active">Active</option>
                     <option value="on_hold">On Hold</option>
@@ -756,13 +736,9 @@ const Projects = () => {
                     <option value="cancelled">Cancelled</option>
                   </select>
                 </div>
-                <div className="form-group">
+                <div>
                   <label>Priority:</label>
-                  <select
-                    className="form-control"
-                    value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                  >
+                  <select className="form-control" value={formData.priority} onChange={e => setFormData({ ...formData, priority: e.target.value })}>
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
@@ -770,169 +746,51 @@ const Projects = () => {
                   </select>
                 </div>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
-                <div className="form-group">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                   <label>Start Date:</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    required
-                  />
+                  <Input type="date" value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} required />
                 </div>
-                <div className="form-group">
+                <div>
                   <label>End Date:</label>
-                  <input
-                    type="date"
-                    className="form-control"
-                    value={formData.endDate}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    required
-                  />
+                  <Input type="date" value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} required />
                 </div>
               </div>
-              <div className="form-group">
+              <div>
                 <label>Budget:</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={formData.budget}
-                  onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-                />
+                <Input type="number" value={formData.budget} onChange={e => setFormData({ ...formData, budget: e.target.value })} />
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "15px" }}>
-                <div className="form-group">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                   <label>Account:</label>
-                  <select
-                    className="form-control"
-                    value={formData.account}
-                    onChange={(e) => setFormData({ ...formData, account: e.target.value })}
-                  >
+                  <select className="form-control" value={formData.account} onChange={e => setFormData({ ...formData, account: e.target.value })}>
                     <option value="">Select Account</option>
-                    {accounts.map((account) => (
-                      <option key={account._id} value={account._id}>
-                        {account.name}
-                      </option>
-                    ))}
+                    {accounts.map(acc => <option key={acc._id} value={acc._id}>{acc.name}</option>)}
                   </select>
                 </div>
-                <div className="form-group">
+                <div>
                   <label>Contact:</label>
-                  <select
-                    className="form-control"
-                    value={formData.contact}
-                    onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                  >
+                  <select className="form-control" value={formData.contact} onChange={e => setFormData({ ...formData, contact: e.target.value })}>
                     <option value="">Select Contact</option>
-                    {contacts.map((contact) => (
-                      <option key={contact._id} value={contact._id}>
-                        {contact.firstName} {contact.lastName}
-                      </option>
-                    ))}
+                    {contacts.map(c => <option key={c._id} value={c._id}>{c.firstName} {c.lastName}</option>)}
                   </select>
                 </div>
               </div>
-              {/* AssignedTo selection */}
-              <div className="form-group">
-                <label>Assigned To:</label>
-                <select
-                  className="form-control"
-                  value={formData.assignedTo}
-                  onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-                  required
-                >
-                  <option value="">Select User</option>
-                  {users.map((user) => (
-                    <option key={user._id} value={user._id}>
-                      {user.name} ({user.role})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
+              <div>
                 <label>Team Members:</label>
-                <select
-                  multiple
-                  className="form-control"
-                  value={formData.teamMembers}
-                  onChange={(e) => {
-                    const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value)
-                    setFormData({ ...formData, teamMembers: selectedOptions })
-                  }}
-                  style={{ height: "100px" }}
-                >
-                  {users.map((user) => (
-                    <option key={user._id} value={user._id}>
-                      {user.name} ({user.role})
-                    </option>
-                  ))}
+                <select className="form-control" multiple value={formData.teamMembers} onChange={e => setFormData({ ...formData, teamMembers: Array.from(e.target.selectedOptions, option => option.value) })}>
+                  {users.map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
                 </select>
-                <small>Hold Ctrl/Cmd to select multiple team members</small>
               </div>
-
-              <div className="form-group">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <label>Milestones:</label>
-                  <button type="button" className="btn btn-secondary" onClick={addMilestone}>
-                    Add Milestone
-                  </button>
-                </div>
-                {formData.milestones.map((milestone, index) => (
-                  <div
-                    key={index}
-                    style={{ border: "1px solid #ddd", padding: "10px", margin: "5px 0", borderRadius: "4px" }}
-                  >
-                    <div
-                      style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "10px", alignItems: "end" }}
-                    >
-                      <div>
-                        <label>Name:</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={milestone.name}
-                          onChange={(e) => updateMilestone(index, "name", e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label>Due Date:</label>
-                        <input
-                          type="date"
-                          className="form-control"
-                          value={milestone.dueDate}
-                          onChange={(e) => updateMilestone(index, "dueDate", e.target.value)}
-                        />
-                      </div>
-                      <button type="button" className="btn btn-danger" onClick={() => removeMilestone(index)}>
-                        Remove
-                      </button>
-                    </div>
-                    <div style={{ marginTop: "10px" }}>
-                      <label>Description:</label>
-                      <textarea
-                        className="form-control"
-                        rows="2"
-                        value={milestone.description}
-                        onChange={(e) => updateMilestone(index, "description", e.target.value)}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  {editingProject ? "Update" : "Create"} Project
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+              {/* Add more fields as needed */}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
+              <Button type="submit">{editingProject ? "Update Project" : "Create Project"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   )
 }

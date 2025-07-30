@@ -3,6 +3,9 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 import { useAuth } from "../context/AuthContext"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "../components/ui/Dialog"
+import { Input } from "../components/ui/Input"
+import { Button } from "../components/ui/Button"
 
 const Tickets = () => {
   const [tickets, setTickets] = useState([])
@@ -183,107 +186,66 @@ const Tickets = () => {
         </table>
       </div>
 
-      {showModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>{editingTicket ? "Edit Ticket" : "Create New Ticket"}</h3>
-              <button className="close" onClick={() => setShowModal(false)}>
-                ×
-              </button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              {error && (
-                <div style={{ color: "red", marginBottom: 10 }}>{error}</div>
-              )}
-              <div className="form-group">
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingTicket ? "Edit Ticket" : "Create New Ticket"}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            {error && <div className="text-red-600 mb-2">{error}</div>}
+            <div className="space-y-4">
+              <div>
                 <label>Title:</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
+                <Input type="text" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} required />
               </div>
-              <div className="form-group">
+              <div>
                 <label>Description:</label>
-                <textarea
-                  className="form-control"
-                  rows="4"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  required
-                />
+                <Input as="textarea" rows={4} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} required />
               </div>
-              {/* Customer selection for admin/support agent */}
               {user?.role !== "customer" && (
-                <div className="form-group">
+                <div>
                   <label>Customer:</label>
-                  <select
-                    className="form-control"
-                    value={formData.customer}
-                    onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
-                    required
-                  >
+                  <select className="form-control" value={formData.customer} onChange={e => setFormData({ ...formData, customer: e.target.value })} required>
                     <option value="">Select Customer</option>
-                    {customers.map((c) => (
-                      <option key={c._id} value={c._id}>{c.name} ({c.email})</option>
-                    ))}
+                    {customers.map(c => <option key={c._id} value={c._id}>{c.name} ({c.email})</option>)}
                   </select>
                 </div>
               )}
-              <div className="form-group">
+              <div>
                 <label>Status:</label>
-                <select
-                  className="form-control"
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                >
+                <select className="form-control" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
                   <option value="open">Open</option>
                   <option value="in_progress">In Progress</option>
                   <option value="resolved">Resolved</option>
                   <option value="closed">Closed</option>
                 </select>
               </div>
-              <div className="form-group">
+              <div>
                 <label>Priority:</label>
-                <select
-                  className="form-control"
-                  value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                >
+                <select className="form-control" value={formData.priority} onChange={e => setFormData({ ...formData, priority: e.target.value })}>
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
                   <option value="urgent">Urgent</option>
                 </select>
               </div>
-              <div className="form-group">
+              <div>
                 <label>Category:</label>
-                <select
-                  className="form-control"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                >
+                <select className="form-control" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
                   <option value="technical">Technical</option>
                   <option value="billing">Billing</option>
                   <option value="general">General</option>
                   <option value="feature_request">Feature Request</option>
                 </select>
               </div>
-              <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  {editingTicket ? "Update" : "Create"} Ticket
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
+              <Button type="submit">{editingTicket ? "Update" : "Create"} Ticket</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

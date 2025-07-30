@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react"
 import axios from "axios"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "../components/ui/Dialog"
+import { Input } from "../components/ui/Input"
+import { Button } from "../components/ui/Button"
 
 const EmailCenter = () => {
   const [templates, setTemplates] = useState([])
@@ -16,6 +19,7 @@ const EmailCenter = () => {
   })
   const [sending, setSending] = useState(false)
   const [sendResult, setSendResult] = useState(null)
+  const [showDialog, setShowDialog] = useState(false)
 
   useEffect(() => {
     fetchTemplates()
@@ -106,153 +110,88 @@ const EmailCenter = () => {
   return (
     <div>
       <h1>Email Center</h1>
-
-      <div className="card">
-        <h3>Compose Email</h3>
-
-        <div className="form-group">
-          <label>Email Template:</label>
-          <select
-            className="form-control"
-            value={selectedTemplate}
-            onChange={(e) => handleTemplateChange(e.target.value)}
-          >
-            <option value="">Select Template</option>
-            {templates.map((template) => (
-              <option key={template.id} value={template.id}>
-                {template.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Subject:</label>
-          <input
-            type="text"
-            className="form-control"
-            value={emailData.subject}
-            onChange={(e) => setEmailData({ ...emailData, subject: e.target.value })}
-            placeholder="Email subject"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Custom Message:</label>
-          <textarea
-            className="form-control"
-            rows="4"
-            value={emailData.customMessage}
-            onChange={(e) => setEmailData({ ...emailData, customMessage: e.target.value })}
-            placeholder="This will replace {{customMessage}} in the template"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Custom Body (if not using template):</label>
-          <textarea
-            className="form-control"
-            rows="6"
-            value={emailData.body}
-            onChange={(e) => setEmailData({ ...emailData, body: e.target.value })}
-            placeholder="Custom email body"
-          />
-        </div>
-      </div>
-
-      <div className="card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h3>Recipients ({selectedRecipients.length} selected)</h3>
-          <div>
-            <button className="btn btn-secondary" onClick={selectAllContacts} style={{ marginRight: "10px" }}>
-              Select All Contacts
-            </button>
-            <button className="btn btn-secondary" onClick={clearSelection}>
-              Clear Selection
-            </button>
-          </div>
-        </div>
-
-        <div style={{ maxHeight: "300px", overflowY: "auto", border: "1px solid #ddd", padding: "10px" }}>
-          <h4>Contacts</h4>
-          {contacts.map((contact) => (
-            <div key={contact._id} style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
-              <input
-                type="checkbox"
-                checked={selectedRecipients.includes(contact._id)}
-                onChange={() => toggleRecipient(contact._id)}
-                style={{ marginRight: "10px" }}
-              />
-              <span>
-                {contact.firstName} {contact.lastName} ({contact.email})
-                {contact.account && <span style={{ color: "#666" }}> - {contact.account.name}</span>}
-              </span>
-            </div>
-          ))}
-
-          <h4 style={{ marginTop: "20px" }}>Leads</h4>
-          {leads.map((lead) => (
-            <div key={lead._id} style={{ display: "flex", alignItems: "center", marginBottom: "5px" }}>
-              <input
-                type="checkbox"
-                checked={selectedRecipients.includes(lead._id)}
-                onChange={() => toggleRecipient(lead._id)}
-                style={{ marginRight: "10px" }}
-              />
-              <span>
-                {lead.firstName} {lead.lastName} ({lead.email})
-                {lead.company && <span style={{ color: "#666" }}> - {lead.company}</span>}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="card">
-        <button
-          className="btn btn-primary"
-          onClick={handleSendEmail}
-          disabled={sending || selectedRecipients.length === 0}
-        >
-          {sending ? "Sending..." : `Send Email to ${selectedRecipients.length} Recipients`}
-        </button>
-
-        {sendResult && (
-          <div
-            className={`alert ${sendResult.success ? "alert-success" : "alert-danger"}`}
-            style={{ marginTop: "15px" }}
-          >
-            <h4>{sendResult.success ? "Email Sent" : "Send Failed"}</h4>
-            <p>{sendResult.message}</p>
-            {sendResult.data && (
+      <Button onClick={() => setShowDialog(true)} className="mb-4">Compose Email</Button>
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Compose Email</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={e => { e.preventDefault(); handleSendEmail(); }}>
+            <div className="space-y-4">
               <div>
-                <p>Successful: {sendResult.data.successCount}</p>
-                <p>Failed: {sendResult.data.failureCount}</p>
+                <label>Email Template:</label>
+                <select className="form-control" value={selectedTemplate} onChange={e => handleTemplateChange(e.target.value)}>
+                  <option value="">Select Template</option>
+                  {templates.map(template => (
+                    <option key={template.id} value={template.id}>{template.name}</option>
+                  ))}
+                </select>
               </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="card">
+              <div>
+                <label>Subject:</label>
+                <Input type="text" value={emailData.subject} onChange={e => setEmailData({ ...emailData, subject: e.target.value })} placeholder="Email subject" />
+              </div>
+              <div>
+                <label>Custom Message:</label>
+                <Input as="textarea" rows={4} value={emailData.customMessage} onChange={e => setEmailData({ ...emailData, customMessage: e.target.value })} placeholder="This will replace {{customMessage}} in the template" />
+              </div>
+              <div>
+                <label>Custom Body (if not using template):</label>
+                <Input as="textarea" rows={6} value={emailData.body} onChange={e => setEmailData({ ...emailData, body: e.target.value })} placeholder="Custom email body" />
+              </div>
+              <div>
+                <label>Recipients</label>
+                <div className="flex gap-2 mb-2">
+                  <Button type="button" variant="secondary" onClick={selectAllContacts}>Select All Contacts</Button>
+                  <Button type="button" variant="secondary" onClick={clearSelection}>Clear Selection</Button>
+                </div>
+                <div className="max-h-48 overflow-y-auto border p-2 rounded">
+                  <div className="font-semibold mb-1">Contacts</div>
+                  {contacts.map(contact => (
+                    <div key={contact._id} className="flex items-center mb-1">
+                      <input type="checkbox" checked={selectedRecipients.includes(contact._id)} onChange={() => toggleRecipient(contact._id)} className="mr-2" />
+                      <span>{contact.firstName} {contact.lastName} ({contact.email}) {contact.account && <span className="text-muted-foreground">- {contact.account.name}</span>}</span>
+                    </div>
+                  ))}
+                  <div className="font-semibold mt-2 mb-1">Leads</div>
+                  {leads.map(lead => (
+                    <div key={lead._id} className="flex items-center mb-1">
+                      <input type="checkbox" checked={selectedRecipients.includes(lead._id)} onChange={() => toggleRecipient(lead._id)} className="mr-2" />
+                      <span>{lead.firstName} {lead.lastName} ({lead.email}) {lead.company && <span className="text-muted-foreground">- {lead.company}</span>}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {sendResult && (
+                <div className={`alert ${sendResult.success ? "alert-success" : "alert-danger"} mt-2`}>
+                  <h4>{sendResult.success ? "Email Sent" : "Send Failed"}</h4>
+                  <p>{sendResult.message}</p>
+                  {sendResult.data && (
+                    <div>
+                      <p>Successful: {sendResult.data.successCount}</p>
+                      <p>Failed: {sendResult.data.failureCount}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowDialog(false)}>Cancel</Button>
+              <Button type="submit" disabled={sending || selectedRecipients.length === 0}>{sending ? "Sending..." : `Send Email to ${selectedRecipients.length} Recipients`}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      {/* Keep the rest of the page unchanged, e.g., template variables card */}
+      <div className="card mt-6">
         <h3>Template Variables</h3>
         <p>You can use these variables in your email templates:</p>
         <ul>
-          <li>
-            <code>{"{{firstName}}"}</code> - Recipient's first name
-          </li>
-          <li>
-            <code>{"{{lastName}}"}</code> - Recipient's last name
-          </li>
-          <li>
-            <code>{"{{company}}"}</code> - Recipient's company
-          </li>
-          <li>
-            <code>{"{{senderName}}"}</code> - Your name
-          </li>
-          <li>
-            <code>{"{{customMessage}}"}</code> - Custom message from form
-          </li>
+          <li><code>{"{{firstName}}"}</code> - Recipient's first name</li>
+          <li><code>{"{{lastName}}"}</code> - Recipient's last name</li>
+          <li><code>{"{{company}}"}</code> - Recipient's company</li>
+          <li><code>{"{{senderName}}"}</code> - Your name</li>
+          <li><code>{"{{customMessage}}"}</code> - Custom message from form</li>
         </ul>
       </div>
     </div>
