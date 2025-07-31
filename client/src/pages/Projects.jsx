@@ -61,9 +61,12 @@ const Projects = () => {
     teamMembers: [],
     milestones: [],
     assignedTo: "",
+    progress: 0,
   })
   const [error, setError] = useState("")
   const { user } = useAuth()
+  const [editingProgress, setEditingProgress] = useState(null)
+  const [progressValue, setProgressValue] = useState(0)
 
   useEffect(() => {
     if (user?.role !== "customer") {
@@ -151,6 +154,7 @@ const Projects = () => {
       teamMembers: project.teamMembers?.map((member) => member._id) || [],
       milestones: project.milestones || [],
       assignedTo: project.assignedTo?._id || "",
+      progress: project.progress || 0,
     })
     setShowModal(true)
   }
@@ -169,7 +173,46 @@ const Projects = () => {
       teamMembers: [],
       milestones: [],
       assignedTo: "",
+      progress: 0,
     })
+  }
+
+  const handleProgressUpdate = async (projectId, newProgress) => {
+    try {
+      await axios.put(`/api/projects/${projectId}`, { progress: newProgress })
+      fetchProjects() // Refresh the projects list
+      setEditingProgress(null)
+    } catch (error) {
+      console.error("Error updating progress:", error)
+    }
+  }
+
+  const startProgressEdit = (project) => {
+    setEditingProgress(project._id)
+    setProgressValue(project.progress || 0)
+  }
+
+  const isTeamMember = (project) => {
+    if (!user) return false
+    return project.teamMembers?.some(member => member._id === user._id) ||
+      project.assignedTo?._id === user._id ||
+      user.role === 'admin' ||
+      user.role === 'super_admin'
+  }
+
+  const canEditSensitiveInfo = (project) => {
+    if (!user) return false
+    // Full access for admins and super admins
+    if (user.role === 'admin' || user.role === 'super_admin') return true
+    // Project creator can edit everything
+    if (project.createdBy?._id === user._id) return true
+    // Team members can only edit limited fields
+    return false
+  }
+
+  const isProjectCreator = (project) => {
+    if (!user) return false
+    return project.createdBy?._id === user._id
   }
 
   const [searchTerm, setSearchTerm] = useState("")
@@ -480,12 +523,44 @@ const Projects = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <div className="w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            {editingProgress === project._id ? (
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={progressValue}
+                                  onChange={(e) => setProgressValue(parseInt(e.target.value) || 0)}
+                                  className="w-16 h-8 text-sm"
+                                />
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleProgressUpdate(project._id, progressValue)}
+                                  className="h-8 px-2"
+                                >
+                                  ✓
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setEditingProgress(null)}
+                                  className="h-8 px-2"
+                                >
+                                  ✕
+                                </Button>
+                              </div>
+                            ) : (
                               <div
-                                className="h-full bg-green-500 transition-all duration-300"
-                                style={{ width: `${project.progress || 0}%` }}
-                              />
-                            </div>
+                                className="w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                                onClick={() => isTeamMember(project) && startProgressEdit(project)}
+                                title={isTeamMember(project) ? "Click to edit progress" : "Progress"}
+                              >
+                                <div
+                                  className="h-full bg-green-500 transition-all duration-300"
+                                  style={{ width: `${project.progress || 0}%` }}
+                                />
+                              </div>
+                            )}
                             <span className="text-sm font-medium">{project.progress || 0}%</span>
                           </div>
                         </TableCell>
@@ -647,12 +722,44 @@ const Projects = () => {
                           <span>Progress</span>
                           <span className="font-medium">{project.progress || 0}%</span>
                         </div>
-                        <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        {editingProgress === project._id ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={progressValue}
+                              onChange={(e) => setProgressValue(parseInt(e.target.value) || 0)}
+                              className="w-20 h-8 text-sm"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => handleProgressUpdate(project._id, progressValue)}
+                              className="h-8 px-2"
+                            >
+                              ✓
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingProgress(null)}
+                              className="h-8 px-2"
+                            >
+                              ✕
+                            </Button>
+                          </div>
+                        ) : (
                           <div
-                            className="h-full bg-green-500 transition-all duration-300"
-                            style={{ width: `${project.progress || 0}%` }}
-                          />
-                        </div>
+                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                            onClick={() => isTeamMember(project) && startProgressEdit(project)}
+                            title={isTeamMember(project) ? "Click to edit progress" : "Progress"}
+                          >
+                            <div
+                              className="h-full bg-green-500 transition-all duration-300"
+                              style={{ width: `${project.progress || 0}%` }}
+                            />
+                          </div>
+                        )}
                       </div>
 
                       <div className="space-y-2 text-sm text-muted-foreground">
@@ -712,23 +819,64 @@ const Projects = () => {
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent style={{ maxWidth: 800 }}>
           <DialogHeader>
-            <DialogTitle>{editingProject ? "Edit Project" : "Add New Project"}</DialogTitle>
+            <DialogTitle>
+              {editingProject ? "Edit Project" : "Add New Project"}
+              {editingProject && !canEditSensitiveInfo(editingProject) && (
+                <span className="text-sm font-normal text-muted-foreground block mt-1">
+                  Limited Edit Mode - You can only edit progress, description, and status
+                </span>
+              )}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             {error && <div className="text-red-600 mb-2">{error}</div>}
+
+            {editingProject && !canEditSensitiveInfo(editingProject) && (
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3 mb-4">
+                <div className="flex items-start gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="text-sm">
+                    <p className="font-medium text-blue-900 dark:text-blue-100">Limited Access</p>
+                    <p className="text-blue-700 dark:text-blue-200 mt-1">
+                      As a team member, you can only edit: <strong>Progress</strong>, <strong>Description</strong>, and <strong>Status</strong>.
+                      Contact an admin or project creator to modify other fields.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4">
               <div>
                 <label>Project Name:</label>
-                <Input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+                <Input
+                  type="text"
+                  value={formData.name}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  required
+                  disabled={editingProject && !canEditSensitiveInfo(editingProject)}
+                />
+                {editingProject && !canEditSensitiveInfo(editingProject) && (
+                  <p className="text-xs text-muted-foreground mt-1">Only admins and project creator can edit this field</p>
+                )}
               </div>
               <div>
                 <label>Description:</label>
-                <Input as="textarea" rows={3} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
+                <Input
+                  as="textarea"
+                  rows={3}
+                  value={formData.description}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label>Status:</label>
-                  <select className="form-control" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
+                  <select
+                    className="form-control"
+                    value={formData.status}
+                    onChange={e => setFormData({ ...formData, status: e.target.value })}
+                  >
                     <option value="planning">Planning</option>
                     <option value="active">Active</option>
                     <option value="on_hold">On Hold</option>
@@ -738,49 +886,141 @@ const Projects = () => {
                 </div>
                 <div>
                   <label>Priority:</label>
-                  <select className="form-control" value={formData.priority} onChange={e => setFormData({ ...formData, priority: e.target.value })}>
+                  <select
+                    className="form-control"
+                    value={formData.priority}
+                    onChange={e => setFormData({ ...formData, priority: e.target.value })}
+                    disabled={editingProject && !canEditSensitiveInfo(editingProject)}
+                  >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
                     <option value="urgent">Urgent</option>
                   </select>
+                  {editingProject && !canEditSensitiveInfo(editingProject) && (
+                    <p className="text-xs text-muted-foreground mt-1">Only admins and project creator can edit this field</p>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label>Start Date:</label>
-                  <Input type="date" value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} required />
+                  <Input
+                    type="date"
+                    value={formData.startDate}
+                    onChange={e => setFormData({ ...formData, startDate: e.target.value })}
+                    required
+                    disabled={editingProject && !canEditSensitiveInfo(editingProject)}
+                  />
+                  {editingProject && !canEditSensitiveInfo(editingProject) && (
+                    <p className="text-xs text-muted-foreground mt-1">Only admins and project creator can edit this field</p>
+                  )}
                 </div>
                 <div>
                   <label>End Date:</label>
-                  <Input type="date" value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} required />
+                  <Input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={e => setFormData({ ...formData, endDate: e.target.value })}
+                    required
+                    disabled={editingProject && !canEditSensitiveInfo(editingProject)}
+                  />
+                  {editingProject && !canEditSensitiveInfo(editingProject) && (
+                    <p className="text-xs text-muted-foreground mt-1">Only admins and project creator can edit this field</p>
+                  )}
                 </div>
               </div>
               <div>
                 <label>Budget:</label>
-                <Input type="number" value={formData.budget} onChange={e => setFormData({ ...formData, budget: e.target.value })} />
+                <Input
+                  type="number"
+                  value={formData.budget}
+                  onChange={e => setFormData({ ...formData, budget: e.target.value })}
+                  disabled={editingProject && !canEditSensitiveInfo(editingProject)}
+                />
+                {editingProject && !canEditSensitiveInfo(editingProject) && (
+                  <p className="text-xs text-muted-foreground mt-1">Only admins and project creator can edit this field</p>
+                )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label>Account:</label>
-                  <select className="form-control" value={formData.account} onChange={e => setFormData({ ...formData, account: e.target.value })}>
+                  <select
+                    className="form-control"
+                    value={formData.account}
+                    onChange={e => setFormData({ ...formData, account: e.target.value })}
+                    disabled={editingProject && !canEditSensitiveInfo(editingProject)}
+                  >
                     <option value="">Select Account</option>
                     {accounts.map(acc => <option key={acc._id} value={acc._id}>{acc.name}</option>)}
                   </select>
+                  {editingProject && !canEditSensitiveInfo(editingProject) && (
+                    <p className="text-xs text-muted-foreground mt-1">Only admins and project creator can edit this field</p>
+                  )}
                 </div>
                 <div>
                   <label>Contact:</label>
-                  <select className="form-control" value={formData.contact} onChange={e => setFormData({ ...formData, contact: e.target.value })}>
+                  <select
+                    className="form-control"
+                    value={formData.contact}
+                    onChange={e => setFormData({ ...formData, contact: e.target.value })}
+                    disabled={editingProject && !canEditSensitiveInfo(editingProject)}
+                  >
                     <option value="">Select Contact</option>
                     {contacts.map(c => <option key={c._id} value={c._id}>{c.firstName} {c.lastName}</option>)}
                   </select>
+                  {editingProject && !canEditSensitiveInfo(editingProject) && (
+                    <p className="text-xs text-muted-foreground mt-1">Only admins and project creator can edit this field</p>
+                  )}
                 </div>
               </div>
               <div>
                 <label>Team Members:</label>
-                <select className="form-control" multiple value={formData.teamMembers} onChange={e => setFormData({ ...formData, teamMembers: Array.from(e.target.selectedOptions, option => option.value) })}>
-                  {users.map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
-                </select>
+                {editingProject && !canEditSensitiveInfo(editingProject) ? (
+                  <div className="space-y-2">
+                    <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md border">
+                      <p className="text-sm text-muted-foreground mb-2">Current Team Members (Read-only):</p>
+                      <div className="space-y-1">
+                        {editingProject.teamMembers && editingProject.teamMembers.length > 0 ? (
+                          editingProject.teamMembers.map(member => (
+                            <div key={member._id} className="flex items-center gap-2 text-sm">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span>{member.name}</span>
+                              {member.role && (
+                                <Badge variant="outline" className="text-xs">
+                                  {member.role.replace('_', ' ')}
+                                </Badge>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">No team members assigned</p>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Only admins and project creator can edit team members</p>
+                  </div>
+                ) : (
+                  <select
+                    className="form-control"
+                    multiple
+                    value={formData.teamMembers}
+                    onChange={e => setFormData({ ...formData, teamMembers: Array.from(e.target.selectedOptions, option => option.value) })}
+                  >
+                    {users.map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
+                  </select>
+                )}
+              </div>
+              <div>
+                <label>Progress (%):</label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={formData.progress}
+                  onChange={e => setFormData({ ...formData, progress: parseInt(e.target.value) || 0 })}
+                />
+                <p className="text-xs text-muted-foreground mt-1">Team members can update progress</p>
               </div>
               {/* Add more fields as needed */}
             </div>
