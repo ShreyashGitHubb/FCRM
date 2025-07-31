@@ -21,7 +21,8 @@ import {
     UsersIcon,
     GlobeAltIcon,
     ClockIcon,
-    ChartBarIcon
+    ChartBarIcon,
+    DocumentChartBarIcon
 } from '@heroicons/react/24/outline'
 
 const iconMap = {
@@ -39,6 +40,7 @@ const iconMap = {
     '/portal': GlobeAltIcon,
     '/pending-approvals': ClockIcon,
     '/admin-dashboard': ChartBarIcon,
+    '/reports': DocumentChartBarIcon,
 }
 
 const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
@@ -116,6 +118,11 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                 path: "/admin-dashboard",
                 label: "Admin Dashboard",
                 icon: ChartBarIcon,
+            })
+            allItems.push({
+                path: "/reports",
+                label: "Reports & Analytics",
+                icon: DocumentChartBarIcon,
             })
         }
 

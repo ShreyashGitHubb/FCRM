@@ -21,6 +21,7 @@ import Projects from "./pages/Projects"
 import AdminDashboard from "./pages/AdminDashboard"
 import ImportExport from "./pages/ImportExport"
 import EmailCenter from "./pages/EmailCenter"
+import Reports from "./pages/Reports"
 
 // Wrapper components for each route
 const DashboardPage = () => (
@@ -107,6 +108,12 @@ const EmailCenterPage = () => (
   </Layout>
 )
 
+const ReportsPage = () => (
+  <Layout>
+    <Reports />
+  </Layout>
+)
+
 function App() {
   return (
     <ThemeProvider>
@@ -133,6 +140,7 @@ function App() {
               <Route path="/admin-dashboard" element={<ProtectedRoute element={AdminDashboardPage} />} />
               <Route path="/import-export" element={<ProtectedRoute element={ImportExportPage} />} />
               <Route path="/email-center" element={<ProtectedRoute element={EmailCenterPage} />} />
+              <Route path="/reports" element={<ProtectedRoute element={ReportsPage} />} />
 
               {/* Catch all route - redirect to dashboard or login */}
               <Route path="*" element={<Navigate to="/" replace />} />

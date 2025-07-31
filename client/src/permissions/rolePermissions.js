@@ -15,6 +15,7 @@ export const rolePermissions = {
     "/admin-dashboard",
     "/import-export",
     "/email-center",
+    "/reports",
   ],
   admin: [
     "/",

@@ -1,191 +1,268 @@
-const express = require("express")
-const Lead = require("../models/Lead")
-const Deal = require("../models/Deal")
-const Contact = require("../models/Contact")
-const Account = require("../models/Account")
-const Project = require("../models/Project")
-const Ticket = require("../models/Ticket")
-const User = require("../models/User")
-const { protect, authorize } = require("../middleware/auth")
-
+const express = require('express')
 const router = express.Router()
+const { protect } = require('../middleware/auth')
+const Lead = require('../models/Lead')
+const Deal = require('../models/Deal')
+const Project = require('../models/Project')
+const Ticket = require('../models/Ticket')
+const User = require('../models/User')
+const Account = require('../models/Account')
+const Contact = require('../models/Contact')
+const AuditLog = require('../models/AuditLog')
 
-// @desc    Get dashboard analytics
-// @route   GET /api/analytics/dashboard
-// @access  Private
-router.get("/dashboard", protect, async (req, res) => {
+// Overview statistics
+router.get('/overview', protect, async (req, res) => {
   try {
-    const { period = "30" } = req.query
-    const days = Number.parseInt(period)
-    const startDate = new Date()
-    startDate.setDate(startDate.getDate() - days)
-
-    // Base query for user role filtering
-    const getUserQuery = () => {
-      if (req.user.role === "sales_executive") {
-        return { assignedTo: req.user._id }
-      }
-      return {}
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({ message: 'Access denied' })
     }
 
-    // Get counts
     const [
       totalLeads,
       totalDeals,
-      totalContacts,
-      totalAccounts,
       totalProjects,
       totalTickets,
-      recentLeads,
-      recentDeals,
-      wonDeals,
-      lostDeals,
-      activeProjects,
-      completedProjects,
+      totalRevenue,
+      dealStatus,
+      recentProjects
     ] = await Promise.all([
-      Lead.countDocuments(getUserQuery()),
-      Deal.countDocuments(getUserQuery()),
-      Contact.countDocuments(getUserQuery()),
-      Account.countDocuments(getUserQuery()),
-      Project.countDocuments(getUserQuery()),
-      Ticket.countDocuments(getUserQuery()),
-      Lead.countDocuments({ ...getUserQuery(), createdAt: { $gte: startDate } }),
-      Deal.countDocuments({ ...getUserQuery(), createdAt: { $gte: startDate } }),
-      Deal.countDocuments({ ...getUserQuery(), stage: "won" }),
-      Deal.countDocuments({ ...getUserQuery(), stage: "lost" }),
-      Project.countDocuments({ ...getUserQuery(), status: "active" }),
-      Project.countDocuments({ ...getUserQuery(), status: "completed" }),
+      Lead.countDocuments(),
+      Deal.countDocuments(),
+      Project.countDocuments(),
+      Ticket.countDocuments(),
+      Deal.aggregate([
+        { $match: { status: 'closed_won' } },
+        { $group: { _id: null, total: { $sum: '$value' } } }
+      ]),
+      Deal.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } }
+      ]),
+      Project.find().sort({ createdAt: -1 }).limit(5).populate('account')
     ])
 
-    // Calculate revenue
-    const revenueData = await Deal.aggregate([
-      { $match: { ...getUserQuery(), stage: "won" } },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: "$value" },
-          avgDealSize: { $avg: "$value" },
-        },
-      },
-    ])
-
-    // Lead conversion rate
-    const convertedLeads = await Lead.countDocuments({ ...getUserQuery(), status: "converted" })
-    const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(2) : 0
-
-    // Deal win rate
-    const totalClosedDeals = wonDeals + lostDeals
-    const winRate = totalClosedDeals > 0 ? ((wonDeals / totalClosedDeals) * 100).toFixed(2) : 0
-
-    // Monthly trends
-    const monthlyTrends = await Deal.aggregate([
-      { $match: getUserQuery() },
-      {
-        $group: {
-          _id: {
-            year: { $year: "$createdAt" },
-            month: { $month: "$createdAt" },
-          },
-          count: { $sum: 1 },
-          revenue: { $sum: { $cond: [{ $eq: ["$stage", "won"] }, "$value", 0] } },
-        },
-      },
-      { $sort: { "_id.year": 1, "_id.month": 1 } },
-      { $limit: 12 },
-    ])
+    const dealStatusMap = {}
+    dealStatus.forEach(status => {
+      dealStatusMap[status._id] = status.count
+    })
 
     res.json({
-      success: true,
-      data: {
-        overview: {
-          totalLeads,
-          totalDeals,
-          totalContacts,
-          totalAccounts,
-          totalProjects,
-          totalTickets,
-          recentLeads,
-          recentDeals,
-        },
-        performance: {
-          totalRevenue: revenueData[0]?.totalRevenue || 0,
-          avgDealSize: revenueData[0]?.avgDealSize || 0,
-          conversionRate: Number.parseFloat(conversionRate),
-          winRate: Number.parseFloat(winRate),
-          wonDeals,
-          lostDeals,
-          activeProjects,
-          completedProjects,
-        },
-        trends: monthlyTrends,
-      },
+      totalLeads,
+      totalDeals,
+      totalProjects,
+      totalTickets,
+      totalRevenue: totalRevenue[0]?.total || 0,
+      dealStatus: dealStatusMap,
+      recentProjects,
+      avgResponseTime: 2.5 // Mock data - can be calculated from actual ticket data
     })
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    })
+    console.error('Error fetching overview stats:', error)
+    res.status(500).json({ message: 'Error fetching overview statistics' })
   }
 })
 
-// @desc    Get sales analytics
-// @route   GET /api/analytics/sales
-// @access  Private
-router.get("/sales", protect, authorize("admin", "super_admin", "sales_manager"), async (req, res) => {
+// Recent activity
+router.get('/recent-activity', protect, async (req, res) => {
   try {
-    // Sales by user
-    const salesByUser = await Deal.aggregate([
-      { $match: { stage: "won" } },
-      {
-        $group: {
-          _id: "$assignedTo",
-          totalRevenue: { $sum: "$value" },
-          dealCount: { $sum: 1 },
-        },
-      },
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({ message: 'Access denied' })
+    }
+
+    const recentActivity = await AuditLog.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate('user', 'name')
+
+    const formattedActivity = recentActivity.map(activity => ({
+      description: `${activity.user?.name || 'System'} ${activity.action} ${activity.resource}`,
+      timestamp: activity.createdAt,
+      type: activity.action
+    }))
+
+    res.json(formattedActivity)
+  } catch (error) {
+    console.error('Error fetching recent activity:', error)
+    res.status(500).json({ message: 'Error fetching recent activity' })
+  }
+})
+
+// Top performers
+router.get('/top-performers', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({ message: 'Access denied' })
+    }
+
+    const topPerformers = await Deal.aggregate([
+      { $match: { status: 'closed_won' } },
+      { $group: { _id: '$assignedTo', dealsClosed: { $sum: 1 }, totalValue: { $sum: '$value' } } },
+      { $sort: { dealsClosed: -1 } },
+      { $limit: 5 },
       {
         $lookup: {
-          from: "users",
-          localField: "_id",
-          foreignField: "_id",
-          as: "user",
-        },
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user'
+        }
       },
-      { $unwind: "$user" },
-      {
-        $project: {
-          userName: "$user.name",
-          totalRevenue: 1,
-          dealCount: 1,
-        },
-      },
-      { $sort: { totalRevenue: -1 } },
+      { $unwind: '$user' }
     ])
 
-    // Pipeline performance
-    const pipelinePerformance = await Deal.aggregate([
+    const formattedPerformers = topPerformers.map(performer => ({
+      _id: performer._id,
+      name: performer.user.name,
+      role: performer.user.role,
+      dealsClosed: performer.dealsClosed,
+      totalValue: performer.totalValue
+    }))
+
+    res.json(formattedPerformers)
+  } catch (error) {
+    console.error('Error fetching top performers:', error)
+    res.status(500).json({ message: 'Error fetching top performers' })
+  }
+})
+
+// Conversion rates
+router.get('/conversion-rates', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({ message: 'Access denied' })
+    }
+
+    const [totalLeads, qualifiedLeads, proposals, closedWon] = await Promise.all([
+      Lead.countDocuments(),
+      Lead.countDocuments({ status: 'qualified' }),
+      Deal.countDocuments({ status: 'proposal' }),
+      Deal.countDocuments({ status: 'closed_won' })
+    ])
+
+    const conversionRates = {
+      lead_to_qualified: totalLeads > 0 ? Math.round((qualifiedLeads / totalLeads) * 100) : 0,
+      qualified_to_proposal: qualifiedLeads > 0 ? Math.round((proposals / qualifiedLeads) * 100) : 0,
+      proposal_to_closed: proposals > 0 ? Math.round((closedWon / proposals) * 100) : 0,
+      overall_conversion: totalLeads > 0 ? Math.round((closedWon / totalLeads) * 100) : 0
+    }
+
+    res.json(conversionRates)
+  } catch (error) {
+    console.error('Error fetching conversion rates:', error)
+    res.status(500).json({ message: 'Error fetching conversion rates' })
+  }
+})
+
+// Revenue data
+router.get('/revenue', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({ message: 'Access denied' })
+    }
+
+    const revenueData = await Deal.aggregate([
+      { $match: { status: 'closed_won' } },
       {
         $group: {
-          _id: "$stage",
-          count: { $sum: 1 },
-          totalValue: { $sum: "$value" },
-          avgValue: { $avg: "$value" },
-        },
+          _id: {
+            year: { $year: '$closedDate' },
+            month: { $month: '$closedDate' }
+          },
+          revenue: { $sum: '$value' }
+        }
       },
+      { $sort: { '_id.year': 1, '_id.month': 1 } },
+      { $limit: 12 }
     ])
 
-    res.json({
-      success: true,
-      data: {
-        salesByUser,
-        pipelinePerformance,
-      },
-    })
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+
+    const formattedRevenue = revenueData.map(item => ({
+      month: `${monthNames[item._id.month - 1]} ${item._id.year}`,
+      revenue: item.revenue
+    }))
+
+    res.json(formattedRevenue)
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server error",
+    console.error('Error fetching revenue data:', error)
+    res.status(500).json({ message: 'Error fetching revenue data' })
+  }
+})
+
+// Project status
+router.get('/project-status', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({ message: 'Access denied' })
+    }
+
+    const projectStatus = await Project.aggregate([
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+          avgProgress: { $avg: '$progress' }
+        }
+      }
+    ])
+
+    const statusMap = {}
+    projectStatus.forEach(status => {
+      statusMap[status._id] = {
+        count: status.count,
+        avgProgress: Math.round(status.avgProgress || 0)
+      }
     })
+
+    res.json(statusMap)
+  } catch (error) {
+    console.error('Error fetching project status:', error)
+    res.status(500).json({ message: 'Error fetching project status' })
+  }
+})
+
+// Ticket metrics
+router.get('/ticket-metrics', protect, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({ message: 'Access denied' })
+    }
+
+    const [
+      totalTickets,
+      openTickets,
+      resolvedTickets,
+      avgResolutionTime
+    ] = await Promise.all([
+      Ticket.countDocuments(),
+      Ticket.countDocuments({ status: 'open' }),
+      Ticket.countDocuments({ status: 'resolved' }),
+      Ticket.aggregate([
+        { $match: { status: 'resolved' } },
+        {
+          $group: {
+            _id: null,
+            avgTime: { $avg: { $subtract: ['$resolvedAt', '$createdAt'] } }
+          }
+        }
+      ])
+    ])
+
+    const metrics = {
+      total_tickets: totalTickets,
+      open_tickets: openTickets,
+      resolved_tickets: resolvedTickets,
+      resolution_rate: totalTickets > 0 ? Math.round((resolvedTickets / totalTickets) * 100) : 0,
+      avg_resolution_time: avgResolutionTime[0]?.avgTime ?
+        Math.round(avgResolutionTime[0].avgTime / (1000 * 60 * 60)) : 24 // hours
+    }
+
+    res.json(metrics)
+  } catch (error) {
+    console.error('Error fetching ticket metrics:', error)
+    res.status(500).json({ message: 'Error fetching ticket metrics' })
   }
 })
 
