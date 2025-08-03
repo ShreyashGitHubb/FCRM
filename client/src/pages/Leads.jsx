@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 // import axios from "axios"
-import axios from "../utils/axios";
+import API from "../utils/axios"
 import { useAuth } from "../context/AuthContext"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
@@ -62,7 +62,7 @@ const Leads = () => {
 
   const fetchLeads = async () => {
     try {
-      const res = await axios.get("/api/leads")
+      const res = await API.get("/api/leads")
       setLeads(res.data.data)
       setLoading(false)
     } catch (error) {
@@ -73,7 +73,7 @@ const Leads = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("/api/users")
+      const res = await API.get("/api/users")
       setUsers(res.data.data)
     } catch (error) {
       console.error("Error fetching users:", error)
@@ -92,9 +92,9 @@ const Leads = () => {
         delete submitData.assignedTo
       }
       if (editingLead) {
-        await axios.put(`/api/leads/${editingLead._id}`, submitData)
+        await API.put(`/api/leads/${editingLead._id}`, submitData)
       } else {
-        await axios.post("/api/leads", submitData)
+        await API.post("/api/leads", submitData)
       }
       setShowModal(false)
       setEditingLead(null)
