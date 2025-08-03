@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/
 import { useToast } from '../hooks/use-toast'
 import Toast from '../components/Toast'
 import { canManageUsers } from '../permissions/rolePermissions'
+import API from "../utils/axios"
 
 const Users = () => {
   const [users, setUsers] = useState([])
@@ -32,24 +33,8 @@ const Users = () => {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/users', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setUsers(data.data)
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to fetch users",
-          variant: "destructive",
-        })
-      }
+      const response = await API.get("/api/users")
+      setUsers(response.data.data)
     } catch (error) {
       toast({
         title: "Error",
@@ -64,40 +49,22 @@ const Users = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      const token = localStorage.getItem('token')
-      const url = editingUser ? `/api/users/${editingUser._id}` : '/api/users'
-      const method = editingUser ? 'PUT' : 'POST'
+      const url = editingUser ? `/api/users/${editingUser._id}` : `/api/users`
+      const method = editingUser ? 'put' : 'post'
+      const response = await API[method](url, formData)
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      toast({
+        title: "Success",
+        description: editingUser ? "User updated successfully" : "User created successfully",
       })
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: editingUser ? "User updated successfully" : "User created successfully",
-        })
-        setShowModal(false)
-        setEditingUser(null)
-        resetForm()
-        fetchUsers()
-      } else {
-        const data = await response.json()
-        toast({
-          title: "Error",
-          description: data.message || "Failed to save user",
-          variant: "destructive",
-        })
-      }
+      setShowModal(false)
+      setEditingUser(null)
+      resetForm()
+      fetchUsers()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to save user",
+        description: error.response?.data?.message || "Failed to save user",
         variant: "destructive",
       })
     }
@@ -118,33 +85,16 @@ const Users = () => {
   const handleDelete = async (userId) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        const token = localStorage.getItem('token')
-        const response = await fetch(`/api/users/${userId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
+        await API.delete(`/api/users/${userId}`)
+        toast({
+          title: "Success",
+          description: "User deleted successfully",
         })
-
-        if (response.ok) {
-          toast({
-            title: "Success",
-            description: "User deleted successfully",
-          })
-          fetchUsers()
-        } else {
-          const data = await response.json()
-          toast({
-            title: "Error",
-            description: data.message || "Failed to delete user",
-            variant: "destructive",
-          })
-        }
+        fetchUsers()
       } catch (error) {
         toast({
           title: "Error",
-          description: "Failed to delete user",
+          description: error.response?.data?.message || "Failed to delete user",
           variant: "destructive",
         })
       }
@@ -189,13 +139,9 @@ const Users = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">
-            Manage user accounts and permissions
-          </p>
+          <p className="text-muted-foreground">Manage user accounts and permissions</p>
         </div>
-        {/* <Button onClick={() => setShowModal(true)}>
-          Add New User
-        </Button> */}
+        {/* <Button onClick={() => setShowModal(true)}>Add New User</Button> */}
       </div>
 
       <Card>
@@ -241,20 +187,8 @@ const Users = () => {
                     </td>
                     <td className="p-2">
                       <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(user)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(user._id)}
-                        >
-                          Delete
-                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(user)}>Edit</Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(user._id)}>Delete</Button>
                       </div>
                     </td>
                   </tr>
@@ -268,9 +202,7 @@ const Users = () => {
       <Dialog open={showModal} onOpenChange={setShowModal}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editingUser ? "Edit User" : "Add New User"}
-            </DialogTitle>
+            <DialogTitle>{editingUser ? "Edit User" : "Add New User"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -332,20 +264,14 @@ const Users = () => {
               <Label htmlFor="isApproved">Approved</Label>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setShowModal(false)
-                  setEditingUser(null)
-                  resetForm()
-                }}
-              >
+              <Button type="button" variant="outline" onClick={() => {
+                setShowModal(false)
+                setEditingUser(null)
+                resetForm()
+              }}>
                 Cancel
               </Button>
-              <Button type="submit">
-                {editingUser ? "Update User" : "Create User"}
-              </Button>
+              <Button type="submit">{editingUser ? "Update User" : "Create User"}</Button>
             </div>
           </form>
         </DialogContent>
