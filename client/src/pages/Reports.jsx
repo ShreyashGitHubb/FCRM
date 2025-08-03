@@ -162,7 +162,7 @@ const Reports = () => {
                     </motion.p>
                 </div>
 
-                <motion.div
+{/*                 <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 }}
@@ -176,7 +176,7 @@ const Reports = () => {
                         <EyeIcon className="h-4 w-4 mr-2" />
                         Executive Summary
                     </Button>
-                </motion.div>
+                </motion.div> */}
             </div>
 
             {/* Key Metrics Cards */}
