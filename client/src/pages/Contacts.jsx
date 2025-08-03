@@ -83,7 +83,7 @@ const Contacts = () => {
 
   const fetchAccounts = async () => {
     try {
-      const res = await axios.get("/api/accounts")
+      const res = await API.get("/api/accounts")
       setAccounts(res.data.data)
     } catch (error) {
       console.error("Error fetching accounts:", error)
@@ -94,9 +94,9 @@ const Contacts = () => {
     e.preventDefault()
     try {
       if (editingContact) {
-        await axios.put(`/api/contacts/${editingContact._id}`, formData)
+        await API.put(`/api/contacts/${editingContact._id}`, formData)
       } else {
-        await axios.post("/api/contacts", formData)
+        await API.post("/api/contacts", formData)
       }
       setShowModal(false)
       setEditingContact(null)
