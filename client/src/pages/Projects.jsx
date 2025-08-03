@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 // import axios from "axios"
-import axios from "../utils/axios";
+import API from "../utils/axios"
 import { useAuth } from "../context/AuthContext"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
@@ -80,7 +80,7 @@ const Projects = () => {
 
   const fetchProjects = async () => {
     try {
-      const res = await axios.get("/api/projects")
+      const res = await API.get("/api/projects")
       setProjects(res.data.data)
       setLoading(false)
     } catch (error) {
@@ -91,7 +91,7 @@ const Projects = () => {
 
   const fetchAccounts = async () => {
     try {
-      const res = await axios.get("/api/accounts")
+      const res = await API.get("/api/accounts")
       setAccounts(res.data.data)
     } catch (error) {
       console.error("Error fetching accounts:", error)
@@ -100,7 +100,7 @@ const Projects = () => {
 
   const fetchContacts = async () => {
     try {
-      const res = await axios.get("/api/contacts")
+      const res = await API.get("/api/contacts")
       setContacts(res.data.data)
     } catch (error) {
       console.error("Error fetching contacts:", error)
@@ -109,7 +109,7 @@ const Projects = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("/api/users")
+      const res = await API.get("/api/users")
       setUsers(res.data.data)
     } catch (error) {
       console.error("Error fetching users:", error)
@@ -126,9 +126,9 @@ const Projects = () => {
         submitData.assignedTo = users[0]?._id || ""
       }
       if (editingProject) {
-        await axios.put(`/api/projects/${editingProject._id}`, submitData)
+        await API.put(`/api/projects/${editingProject._id}`, submitData)
       } else {
-        await axios.post("/api/projects", submitData)
+        await API.post("/api/projects", submitData)
       }
       setShowModal(false)
       setEditingProject(null)
@@ -180,7 +180,7 @@ const Projects = () => {
 
   const handleProgressUpdate = async (projectId, newProgress) => {
     try {
-      await axios.put(`/api/projects/${projectId}`, { progress: newProgress })
+      await API.put(`/api/projects/${projectId}`, { progress: newProgress })
       fetchProjects() // Refresh the projects list
       setEditingProgress(null)
     } catch (error) {
