@@ -77,9 +77,9 @@ const Deals = () => {
     e.preventDefault()
     try {
       if (editingDeal) {
-        await axios.put(`/api/deals/${editingDeal._id}`, formData)
+        await API.put(`/api/deals/${editingDeal._id}`, formData)
       } else {
-        await axios.post("/api/deals", formData)
+        await API.post("/api/deals", formData)
       }
       setShowModal(false)
       setEditingDeal(null)
