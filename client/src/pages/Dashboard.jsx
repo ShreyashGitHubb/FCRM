@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import axios from "axios"
+import axios from "../utils/axios";
 import { useAuth } from "../context/AuthContext"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card"
 import { SkeletonStats } from "../components/ui/Skeleton"
@@ -27,7 +28,7 @@ const Dashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const res = await axios.get("/api/dashboard")
+      const res = await axios.get("/dashboard")
       setStats(res.data.data)
       setLoading(false)
     } catch (error) {
