@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 // import axios from "axios"
-import axios from "../utils/axios";
+import API from "../utils/axios"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
 import { Badge } from "../components/ui/Badge"
@@ -48,7 +48,7 @@ const Tasks = () => {
 
   const fetchTasks = async () => {
     try {
-      const res = await axios.get("/api/tasks")
+      const res = await API.get("/api/tasks")
       setTasks(res.data.data)
       setLoading(false)
     } catch (error) {
@@ -61,9 +61,9 @@ const Tasks = () => {
     e.preventDefault()
     try {
       if (editingTask) {
-        await axios.put(`/api/tasks/${editingTask._id}`, formData)
+        await API.put(`/api/tasks/${editingTask._id}`, formData)
       } else {
-        await axios.post("/api/tasks", formData)
+        await API.post("/api/tasks", formData)
       }
       setShowModal(false)
       setEditingTask(null)
