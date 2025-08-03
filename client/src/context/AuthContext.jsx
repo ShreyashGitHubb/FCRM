@@ -6,7 +6,7 @@ import axios from "axios"
 const AuthContext = createContext()
 
 // ✅ Set your backend API base URL directly here
-const BASE_URL = "https://fcrm-02g1.onrender.com"
+const BASE_URL = "https://fcrm-02g1.onrender.com/api"
 
 const authReducer = (state, action) => {
   switch (action.type) {
