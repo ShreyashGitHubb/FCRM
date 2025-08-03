@@ -1,136 +1,94 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
-import { Input } from '../components/ui/Input';
-import { Label } from '../components/ui/Label';
-import { Textarea } from '../components/ui/Textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/Dialog';
-import { useToast } from '../hooks/use-toast';
-import Toast from '../components/Toast';
-import { canApproveUsers } from '../permissions/rolePermissions';
+import React, { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card"
+import { Button } from "../components/ui/Button"
+import { Badge } from "../components/ui/Badge"
+import { Input } from "../components/ui/Input"
+import { Label } from "../components/ui/Label"
+import { Textarea } from "../components/ui/Textarea"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/Dialog"
+import { useToast } from "../hooks/use-toast"
+import Toast from "../components/Toast"
+import { canApproveUsers } from "../permissions/rolePermissions"
+import API from "../utils/axios" // ✅ centralized axios instance
 
 const PendingApprovals = () => {
-  const [pendingApprovals, setPendingApprovals] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const { toast, toasts } = useToast();
+  const [pendingApprovals, setPendingApprovals] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [rejectionReason, setRejectionReason] = useState("")
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [showRejectDialog, setShowRejectDialog] = useState(false)
+  const { toast, toasts } = useToast()
 
   useEffect(() => {
-    fetchPendingApprovals();
-  }, []);
+    fetchPendingApprovals()
+  }, [])
 
   const fetchPendingApprovals = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/users/pending-approvals', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setPendingApprovals(data.data);
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to fetch pending approvals",
-          variant: "destructive",
-        });
-      }
+      const response = await API.get("/api/users/pending-approvals")
+      setPendingApprovals(response.data.data)
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to fetch pending approvals",
         variant: "destructive",
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleApprove = async (userId) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/users/${userId}/approve`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "User approved successfully",
-        });
-        fetchPendingApprovals();
-      } else {
-        const data = await response.json();
-        toast({
-          title: "Error",
-          description: data.message || "Failed to approve user",
-          variant: "destructive",
-        });
-      }
+      await API.put(`/api/users/${userId}/approve`)
+      toast({
+        title: "Success",
+        description: "User approved successfully",
+      })
+      fetchPendingApprovals()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to approve user",
+        description: error.response?.data?.message || "Failed to approve user",
         variant: "destructive",
-      });
+      })
     }
-  };
+  }
 
   const handleReject = async () => {
-    if (!selectedUser) return;
+    if (!selectedUser) return
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/users/${selectedUser}/reject`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ rejectionReason }),
-      });
-
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "User rejected successfully",
-        });
-        setShowRejectDialog(false);
-        setRejectionReason('');
-        setSelectedUser(null);
-        fetchPendingApprovals();
-      } else {
-        const data = await response.json();
-        toast({
-          title: "Error",
-          description: data.message || "Failed to reject user",
-          variant: "destructive",
-        });
-      }
+      await API.put(`/api/users/${selectedUser}/reject`, {
+        rejectionReason,
+      })
+      toast({
+        title: "Success",
+        description: "User rejected successfully",
+      })
+      setShowRejectDialog(false)
+      setRejectionReason("")
+      setSelectedUser(null)
+      fetchPendingApprovals()
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to reject user",
+        description: error.response?.data?.message || "Failed to reject user",
         variant: "destructive",
-      });
+      })
     }
-  };
+  }
 
   const openRejectDialog = (userId) => {
-    setSelectedUser(userId);
-    setShowRejectDialog(true);
-  };
+    setSelectedUser(userId)
+    setShowRejectDialog(true)
+  }
 
   if (loading) {
     return (
@@ -139,7 +97,7 @@ const PendingApprovals = () => {
           <div className="text-lg">Loading pending approvals...</div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -147,9 +105,7 @@ const PendingApprovals = () => {
       <Toast toasts={toasts} />
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Pending Approvals</h1>
-        <p className="text-muted-foreground">
-          Review and approve new user registrations
-        </p>
+        <p className="text-muted-foreground">Review and approve new user registrations</p>
       </div>
 
       {pendingApprovals.length === 0 ? (
@@ -168,15 +124,11 @@ const PendingApprovals = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg">
-                      {approval.userId.name}
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {approval.userId.email}
-                    </p>
+                    <CardTitle className="text-lg">{approval.userId.name}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{approval.userId.email}</p>
                   </div>
                   <Badge variant="secondary">
-                    {approval.userId.role.replace('_', ' ')}
+                    {approval.userId.role.replace("_", " ")}
                   </Badge>
                 </div>
               </CardHeader>
@@ -192,11 +144,11 @@ const PendingApprovals = () => {
                     <div>
                       <span className="font-medium">Role:</span>
                       <p className="text-muted-foreground capitalize">
-                        {approval.userId.role.replace('_', ' ')}
+                        {approval.userId.role.replace("_", " ")}
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button
                       onClick={() => handleApprove(approval.userId._id)}
@@ -240,17 +192,14 @@ const PendingApprovals = () => {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setShowRejectDialog(false);
-                  setRejectionReason('');
-                  setSelectedUser(null);
+                  setShowRejectDialog(false)
+                  setRejectionReason("")
+                  setSelectedUser(null)
                 }}
               >
                 Cancel
               </Button>
-              <Button
-                variant="destructive"
-                onClick={handleReject}
-              >
+              <Button variant="destructive" onClick={handleReject}>
                 Reject User
               </Button>
             </div>
@@ -258,7 +207,7 @@ const PendingApprovals = () => {
         </DialogContent>
       </Dialog>
     </div>
-  );
-};
+  )
+}
 
-export default PendingApprovals;
+export default PendingApprovals
