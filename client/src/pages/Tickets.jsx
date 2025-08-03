@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 // import axios from "axios"
-import axios from "../utils/axios";
+import API from "../utils/axios"
 import { useAuth } from "../context/AuthContext"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "../components/ui/Dialog"
 import { Input } from "../components/ui/Input"
@@ -35,7 +35,7 @@ const Tickets = () => {
 
   const fetchTickets = async () => {
     try {
-      const res = await axios.get("/api/tickets")
+      const res = await API.get("/api/tickets")
       setTickets(res.data.data)
       setLoading(false)
     } catch (error) {
@@ -46,7 +46,7 @@ const Tickets = () => {
 
   const fetchCustomers = async () => {
     try {
-      const res = await axios.get("/api/users")
+      const res = await API.get("/api/users")
       setCustomers(res.data.data.filter(u => u.role === "customer"))
     } catch (error) {
       console.error("Error fetching customers:", error)
@@ -62,9 +62,9 @@ const Tickets = () => {
         delete submitData.assignedTo
       }
       if (editingTicket) {
-        await axios.put(`/api/tickets/${editingTicket._id}`, submitData)
+        await API.put(`/api/tickets/${editingTicket._id}`, submitData)
       } else {
-        await axios.post("/api/tickets", submitData)
+        await API.post("/api/tickets", submitData)
       }
       setShowModal(false)
       setEditingTicket(null)
