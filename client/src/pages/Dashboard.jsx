@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import axios from "axios"
+// import axios from "axios"
 import axios from "../utils/axios";
 import { useAuth } from "../context/AuthContext"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card"
