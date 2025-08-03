@@ -22,7 +22,7 @@ export default defineConfig({
     port: 3002,
     proxy: {
       "/api": {
-        target: "https://fcrm-02g1.onrender.com/api", // ✅ Use your Render backend URL
+        target: "https://fcrm-02g1.onrender.com", // ✅ Use your Render backend URL
         changeOrigin: true,
         secure: false, // add this if you're using self-signed HTTPS (Render uses valid certs so this might be optional)
       },
