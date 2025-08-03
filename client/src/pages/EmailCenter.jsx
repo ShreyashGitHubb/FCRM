@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import axios from "axios"
+// import axios from "axios"
+import axios from "../utils/axios";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "../components/ui/Dialog"
 import { Input } from "../components/ui/Input"
 import { Button } from "../components/ui/Button"
