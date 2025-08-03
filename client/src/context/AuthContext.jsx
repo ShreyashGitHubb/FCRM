@@ -5,6 +5,9 @@ import axios from "axios"
 
 const AuthContext = createContext()
 
+// ✅ Set your backend API base URL directly here
+const BASE_URL = "https://fcrm-02g1.onrender.com"
+
 const authReducer = (state, action) => {
   switch (action.type) {
     case "LOGIN_SUCCESS":
@@ -54,7 +57,6 @@ export const AuthProvider = ({ children }) => {
     error: null,
   })
 
-  // Set auth token
   const setAuthToken = (token) => {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`
@@ -63,14 +65,13 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  // Load user
   const loadUser = async () => {
     if (localStorage.token) {
       setAuthToken(localStorage.token)
     }
 
     try {
-      const res = await axios.get("/api/auth/me")
+      const res = await axios.get(`${BASE_URL}/api/auth/me`)
       dispatch({
         type: "LOGIN_SUCCESS",
         payload: {
@@ -83,12 +84,11 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  // Login user
   const login = async (email, password) => {
     dispatch({ type: "SET_LOADING", payload: true })
 
     try {
-      const res = await axios.post("/api/auth/login", { email, password })
+      const res = await axios.post(`${BASE_URL}/api/auth/login`, { email, password })
       dispatch({
         type: "LOGIN_SUCCESS",
         payload: {
@@ -107,20 +107,24 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  // Register user
   const register = async (name, email, password, role) => {
     try {
-      const res = await axios.post("/api/auth/register", { name, email, password, role })
-      
-      // Don't automatically log in after registration
-      // User needs to wait for approval
+      const res = await axios.post(`${BASE_URL}/api/auth/register`, {
+        name,
+        email,
+        password,
+        role,
+      })
+
       return { success: true, message: res.data.message }
     } catch (err) {
-      return { success: false, message: err.response?.data?.message || "Registration failed" }
+      return {
+        success: false,
+        message: err.response?.data?.message || "Registration failed",
+      }
     }
   }
 
-  // Logout
   const logout = () => {
     dispatch({ type: "LOGOUT" })
     setAuthToken(null)
