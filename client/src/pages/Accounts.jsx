@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-// import axios from "axios"
-// import axios from "../utils/axios";
-import API from "../utils/axios"
+// import API from "API"
+// import API from "../utils/API";
+import API from "../utils/API"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
 import { Badge } from "../components/ui/Badge"
@@ -82,9 +82,9 @@ const Accounts = () => {
     e.preventDefault()
     try {
       if (editingAccount) {
-        await axios.put(`/api/accounts/${editingAccount._id}`, formData)
+        await API.put(`/api/accounts/${editingAccount._id}`, formData)
       } else {
-        await axios.post("/api/accounts", formData)
+        await API.post("/api/accounts", formData)
       }
       setShowModal(false)
       setEditingAccount(null)
