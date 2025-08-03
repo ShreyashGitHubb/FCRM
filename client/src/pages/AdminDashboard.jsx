@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 // import axios from "axios"
-import axios from "../utils/axios";
+// import axios from "../utils/axios";
+import API from "../utils/axios"
 import { useAuth } from "../context/AuthContext"
 
 const AdminDashboard = () => {
@@ -21,7 +22,7 @@ const AdminDashboard = () => {
 
   const fetchAnalytics = async () => {
     try {
-      const res = await axios.get("/api/analytics/dashboard")
+      const res = await API.get("/api/analytics/dashboard")
       setAnalytics(res.data.data)
     } catch (error) {
       console.error("Error fetching analytics:", error)
