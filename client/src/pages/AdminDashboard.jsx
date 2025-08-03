@@ -1,64 +1,40 @@
 "use client"
 
 import { useState, useEffect } from "react"
+// import axios from "axios"
+// import axios from "../utils/axios";
 import API from "../utils/axios"
 import { useAuth } from "../context/AuthContext"
 
 const AdminDashboard = () => {
   const { user } = useAuth()
   const [analytics, setAnalytics] = useState(null)
+  const [salesAnalytics, setSalesAnalytics] = useState(null)
   const [auditLogs, setAuditLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("overview")
 
   useEffect(() => {
-    fetchDashboardData()
+    fetchAnalytics()
+    fetchSalesAnalytics()
     fetchAuditLogs()
   }, [])
 
-  const fetchDashboardData = async () => {
+  const fetchAnalytics = async () => {
     try {
-      const [overviewRes, projectStatusRes, revenueRes] = await Promise.all([
-        API.get("/api/analytics/overview"),
-        API.get("/api/analytics/project-status"),
-        API.get("/api/analytics/revenue"),
-      ])
-
-      setAnalytics({
-        overview: {
-          totalLeads: overviewRes.data.totalLeads,
-          totalDeals: overviewRes.data.totalDeals,
-          totalContacts: 0, // You can fetch /api/contacts and count if needed
-          totalAccounts: 0, // You can fetch /api/accounts and count if needed
-          totalTickets: overviewRes.data.totalTickets,
-        },
-        performance: {
-          totalRevenue: overviewRes.data.totalRevenue,
-          avgDealSize: Math.floor(
-            overviewRes.data.totalRevenue / (overviewRes.data.totalDeals || 1)
-          ),
-          conversionRate: 0, // Optional
-          winRate: 0, // Optional
-          activeProjects: projectStatusRes.data["active"]?.count || 0,
-          completedProjects: projectStatusRes.data["completed"]?.count || 0,
-        },
-        trends: revenueRes.data.map((item) => {
-          const [month, year] = item.month.split(" ")
-          return {
-            _id: {
-              month: new Date(`${month} 1`).getMonth() + 1,
-              year: parseInt(year),
-            },
-            count: Math.floor(Math.random() * 20) + 5, // Fake count for display
-            revenue: item.revenue,
-          }
-        }),
-      })
-
-      setLoading(false)
+      const res = await API.get("/api/analytics/dashboard")
+      setAnalytics(res.data.data)
     } catch (error) {
       console.error("Error fetching analytics:", error)
-      setLoading(false)
+    }
+  }
+
+  const fetchSalesAnalytics = async () => {
+    try {
+      const res = await API.get("/api/analytics/sales")
+      setSalesAnalytics(res.data.data)
+    } catch (error) {
+      console.error("Error fetching sales analytics:", error)
     }
   }
 
@@ -66,22 +42,29 @@ const AdminDashboard = () => {
     try {
       const res = await API.get("/api/audit-logs?limit=20")
       setAuditLogs(res.data.data)
+      setLoading(false)
     } catch (error) {
       console.error("Error fetching audit logs:", error)
+      setLoading(false)
     }
   }
 
-  if (loading) return <div>Loading Admin Dashboard...</div>
+  if (loading) {
+    return <div className="loading">Loading dashboard...</div>
+  }
 
   return (
     <div>
       <h1>Admin Dashboard</h1>
 
       <div className="tabs">
-        <button className={`tab ${activeTab === "overview" ? "active" : ""}`} onClick={() => setActiveTab("overview")}>
+        <button className={tab ${activeTab === "overview" ? "active" : ""}} onClick={() => setActiveTab("overview")}>
           Overview
         </button>
-        <button className={`tab ${activeTab === "audit" ? "active" : ""}`} onClick={() => setActiveTab("audit")}>
+        <button className={tab ${activeTab === "sales" ? "active" : ""}} onClick={() => setActiveTab("sales")}>
+          Sales Analytics
+        </button>
+        <button className={tab ${activeTab === "audit" ? "active" : ""}} onClick={() => setActiveTab("audit")}>
           Audit Logs
         </button>
       </div>
@@ -152,9 +135,9 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          {analytics.trends.length > 0 && (
+          {analytics.trends && analytics.trends.length > 0 && (
             <div className="card">
-              <h3>Monthly Revenue Trends</h3>
+              <h3>Monthly Trends</h3>
               <div className="chart-container">
                 <table className="table">
                   <thead>
@@ -182,6 +165,58 @@ const AdminDashboard = () => {
         </div>
       )}
 
+      {activeTab === "sales" && salesAnalytics && (
+        <div>
+          <div className="card">
+            <h3>Sales Performance by User</h3>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Total Revenue</th>
+                  <th>Deals Won</th>
+                  <th>Avg Deal Size</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesAnalytics.salesByUser.map((user, index) => (
+                  <tr key={index}>
+                    <td>{user.userName}</td>
+                    <td>${user.totalRevenue.toLocaleString()}</td>
+                    <td>{user.dealCount}</td>
+                    <td>${(user.totalRevenue / user.dealCount).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="card">
+            <h3>Pipeline Performance</h3>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Stage</th>
+                  <th>Count</th>
+                  <th>Total Value</th>
+                  <th>Average Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesAnalytics.pipelinePerformance.map((stage, index) => (
+                  <tr key={index}>
+                    <td>{stage._id}</td>
+                    <td>{stage.count}</td>
+                    <td>${stage.totalValue.toLocaleString()}</td>
+                    <td>${stage.avgValue.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {activeTab === "audit" && (
         <div className="card">
           <h3>Recent Activity</h3>
@@ -200,7 +235,9 @@ const AdminDashboard = () => {
                 <tr key={log._id}>
                   <td>{log.user?.name}</td>
                   <td>
-                    <span className={`badge badge-${log.action === "create" ? "success" : log.action === "delete" ? "danger" : "info"}`}>
+                    <span
+                      className={badge badge-${log.action === "create" ? "success" : log.action === "delete" ? "danger" : "info"}}
+                    >
                       {log.action}
                     </span>
                   </td>
