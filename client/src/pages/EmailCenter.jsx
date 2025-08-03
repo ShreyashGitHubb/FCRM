@@ -77,7 +77,7 @@ const EmailCenter = () => {
     setSendResult(null)
 
     try {
-      const res = await axios.post("/api/email/bulk", {
+      const res = await API.post("/api/email/bulk", {
         recipients: selectedRecipients,
         templateId: selectedTemplate,
         subject: emailData.subject,
