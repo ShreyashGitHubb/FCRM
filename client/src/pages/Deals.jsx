@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 // import axios from "axios"
-import axios from "../utils/axios";
+// import axios from "../utils/axios";
+import API from "../utils/axios"
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
 import { Badge } from "../components/ui/Badge"
@@ -63,7 +64,7 @@ const Deals = () => {
 
   const fetchDeals = async () => {
     try {
-      const res = await axios.get("/api/deals")
+      const res = await API.get("/api/deals")
       setDeals(res.data.data)
       setLoading(false)
     } catch (error) {
