@@ -8,17 +8,28 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// ✅ CORS config: Allow your Vercel frontend
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://fcrm-12kh.vercel.app",
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+
+// Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
 
-// Basic root route to verify deployment
+// ✅ Basic root route to verify deployment
 app.get("/", (req, res) => {
   res.send("🚀 CRM Backend is running successfully!");
 });
 
-// Connect to MongoDB
+// ✅ Connect to MongoDB
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -31,7 +42,7 @@ const connectDB = async () => {
 
 connectDB();
 
-// Route files
+// ✅ API Routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/users", require("./routes/users"));
 app.use("/api/leads", require("./routes/leads"));
@@ -51,7 +62,7 @@ app.use("/api/call-logs", require("./routes/call-logs"));
 app.use("/api/audit-logs", require("./routes/audit-logs"));
 app.use("/api/pipelines", require("./routes/pipelines"));
 
-// Error handler middleware
+// ✅ Global Error handler
 app.use((err, req, res, next) => {
   console.error("💥 Error:", err.stack);
   res.status(500).json({
@@ -60,11 +71,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
+// ✅ Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
+
 
 
 
