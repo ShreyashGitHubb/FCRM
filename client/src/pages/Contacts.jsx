@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import axios from "axios"
+// import axios from "axios"
+import axios from "../utils/axios";
 import { Button } from "../components/ui/Button"
 import { Input } from "../components/ui/Input"
 import { Badge } from "../components/ui/Badge"
