@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 // import axios from "axios"
-import axios from "../utils/axios";
+import API from "../utils/axios"
 import { useAuth } from "../context/AuthContext"
 import { Button } from "../components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card"
@@ -56,13 +56,13 @@ const Reports = () => {
                 projectRes,
                 ticketRes
             ] = await Promise.all([
-                axios.get("/api/analytics/overview"),
-                axios.get("/api/analytics/recent-activity"),
-                axios.get("/api/analytics/top-performers"),
-                axios.get("/api/analytics/conversion-rates"),
-                axios.get("/api/analytics/revenue"),
-                axios.get("/api/analytics/project-status"),
-                axios.get("/api/analytics/ticket-metrics")
+                API.get("/api/analytics/overview"),
+                API.get("/api/analytics/recent-activity"),
+                API.get("/api/analytics/top-performers"),
+                API.get("/api/analytics/conversion-rates"),
+                API.get("/api/analytics/revenue"),
+                API.get("/api/analytics/project-status"),
+                API.get("/api/analytics/ticket-metrics")
             ])
 
             setStats(statsRes.data)
@@ -82,7 +82,7 @@ const Reports = () => {
 
     const downloadReport = async (type) => {
         try {
-            const response = await axios.get(`/api/reports/download/${type}`, {
+            const response = await API.get(`/api/reports/download/${type}`, {
                 responseType: 'blob'
             })
 
