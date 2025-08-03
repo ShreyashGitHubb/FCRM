@@ -31,7 +31,7 @@ const AdminDashboard = () => {
 
   const fetchSalesAnalytics = async () => {
     try {
-      const res = await axios.get("/api/analytics/sales")
+      const res = await API.get("/api/analytics/sales")
       setSalesAnalytics(res.data.data)
     } catch (error) {
       console.error("Error fetching sales analytics:", error)
@@ -40,7 +40,7 @@ const AdminDashboard = () => {
 
   const fetchAuditLogs = async () => {
     try {
-      const res = await axios.get("/api/audit-logs?limit=20")
+      const res = await API.get("/api/audit-logs?limit=20")
       setAuditLogs(res.data.data)
       setLoading(false)
     } catch (error) {
