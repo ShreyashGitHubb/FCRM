@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 // import axios from "axios"
-import axios from "../utils/axios";
+import API from "../utils/axios"
 import { useAuth } from "../context/AuthContext"
 
 const Portal = () => {
@@ -16,7 +16,7 @@ const Portal = () => {
 
   const fetchPortalData = async () => {
     try {
-      const res = await axios.get("/api/portal")
+      const res = await API.get("/api/portal")
       setPortalData(res.data.data)
       setLoading(false)
     } catch (error) {
