@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 // import axios from "axios"
-import axios from "../utils/axios";
+// import axios from "../utils/axios";
+import API from "../utils/axios"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "../components/ui/Dialog"
 import { Input } from "../components/ui/Input"
 import { Button } from "../components/ui/Button"
@@ -30,7 +31,7 @@ const EmailCenter = () => {
 
   const fetchTemplates = async () => {
     try {
-      const res = await axios.get("/api/email/templates")
+      const res = await API.get("/api/email/templates")
       setTemplates(res.data.data)
     } catch (error) {
       console.error("Error fetching templates:", error)
@@ -39,7 +40,7 @@ const EmailCenter = () => {
 
   const fetchContacts = async () => {
     try {
-      const res = await axios.get("/api/contacts")
+      const res = await API.get("/api/contacts")
       setContacts(res.data.data)
     } catch (error) {
       console.error("Error fetching contacts:", error)
@@ -48,7 +49,7 @@ const EmailCenter = () => {
 
   const fetchLeads = async () => {
     try {
-      const res = await axios.get("/api/leads")
+      const res = await API.get("/api/leads")
       setLeads(res.data.data)
     } catch (error) {
       console.error("Error fetching leads:", error)
