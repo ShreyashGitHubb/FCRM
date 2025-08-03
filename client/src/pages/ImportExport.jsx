@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 // import axios from "axios"
-import axios from "../utils/axios";
+import API from "../utils/axios"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "../components/ui/Dialog"
 import { Input } from "../components/ui/Input"
 import { Button } from "../components/ui/Button"
@@ -29,7 +29,7 @@ const ImportExport = () => {
     formData.append("file", selectedFile)
 
     try {
-      const res = await axios.post(`/api/import-export/${type}/import`, formData, {
+      const res = await API.post(`/api/import-export/${type}/import`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -49,7 +49,7 @@ const ImportExport = () => {
 
   const handleExport = async (type) => {
     try {
-      const response = await axios.get(`/api/import-export/${type}/export`, {
+      const response = await API.get(`/api/import-export/${type}/export`, {
         responseType: "blob",
       })
 
