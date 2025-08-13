@@ -13,6 +13,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
   "https://fcrm-12kh.vercel.app",
+  "https://fcrm-12khh.vercel.app",
 ];
 
 app.use(cors({
